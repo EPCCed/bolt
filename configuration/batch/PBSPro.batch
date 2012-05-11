@@ -1,0 +1,103 @@
+#
+# PBSPro Batch System
+# ===================
+#
+# This configuration file describes the PBSPro batch system
+# for use with the 'bolt' job submission script generation 
+# tool.
+#
+# This file has been annotated with comments describing each
+# option to aid in installing the tool on other systems.
+#
+# All options must be provided in the configuration file even
+# if the value is not specified.
+#
+
+#-------------------------------------------------------------
+# System description
+#
+# This section defines the name of the batch system for the
+# tool. This name is used when defining the batch system used
+# by a particular compute resource (see the resources
+# configuration files.
+#-------------------------------------------------------------
+[system info]
+name: PBSPro
+
+#-------------------------------------------------------------
+# Basic options
+#
+# This section includes options that apply to both parallel 
+# and serial jobs
+#-------------------------------------------------------------
+[basic options]
+
+# The option identifier is the string that precedes every
+# batch option specified in the job submission script
+option identifier: #PBS
+
+# Option used to specify the job name
+job name option:   -N
+
+# Option used to specify the account to charge the job to
+account option:    -A
+
+# Option used to specify the queue name
+queue option:      -q
+
+#-------------------------------------------------------------
+# Parallel options
+#
+# Options specific to parallel jobs
+#-------------------------------------------------------------
+[parallel options]
+
+# The option used to specify the number of parallel tasks.
+# This is usually combined with the parallel environment 
+# option from the resource configuration file to produce
+# the full command line.
+task option:        -l
+
+# The option to specify the parallel walltime. If this does not end
+# with = or : then a space will be placed between this 
+# and the actual walltime specified.
+time option:        -l walltime=
+
+# Any additional options to add for parallel jobs. Note these
+# should be specified without the option identifier as this
+# will be added automatically.
+additional options:
+
+# Any script lines to include in parallel jobs before the
+# application is launched
+script preamble:
+
+# Any script lines to include in parallel jobs after the
+# application has completed
+script postamble:
+
+#-------------------------------------------------------------
+# Serial options
+#
+# Options specific to serial jobs
+#-------------------------------------------------------------
+[serial options]
+
+# The option to specify the serial walltime. If this does not end
+# with = or : then a space will be placed between this 
+# and the actual walltime specified.
+time option:        -l h_rt=
+
+# Any additional options to add for parallel jobs. Note these
+# should be specified without the option identifier as this
+# will be added automatically.
+additional options:
+
+# Any script lines to include in serial jobs before the
+# application is launched
+script preamble:
+
+# Any script lines to include in serial jobs after the
+# application has completed
+script postamble:
+

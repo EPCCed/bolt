@@ -1,0 +1,25 @@
+# This is the test configuration file for the PBSPro 
+# batch system.
+
+[system info]
+name: SGE
+
+[basic options]
+option identifier: #$
+job name option:   -N
+account option:    -A
+queue option:      -q
+
+[parallel options]
+task option:        -pe
+time option:        -l h_rt=
+additional options: -cwd -V
+script preamble:
+script postamble:
+
+[serial options]
+time option:        -l h_rt=
+additional options: -cwd -V
+script preamble:
+script postamble:
+

@@ -1,0 +1,25 @@
+#
+# Bull version of SLURM Batch System
+#
+[system info]
+name: SLURM_Bull
+
+[basic options]
+option identifier: #MSUB
+job name option:   -r
+account option:    -A
+queue option:      -q
+
+[parallel options]
+task option:        -n
+time option:        -T
+additional options:
+script preamble:
+script postamble:
+
+[serial options]
+time option:        -T
+additional options:
+script preamble:
+script postamble:
+

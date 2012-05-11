@@ -1,0 +1,25 @@
+#
+# BG/P version of LoadLeveller Batch System
+#
+[system info]
+name: LL_BGP
+
+[basic options]
+option identifier:  #@
+job name option:    job_name =
+account option:     
+queue option:       job_type =
+
+[parallel options]
+task option:        bg_size =
+time option:        wall_clock_limit =
+additional options: queue
+script preamble:
+script postamble:
+
+[serial options]
+time option:        wall_clock_limit =
+additional options: queue
+script preamble:
+script postamble:
+
