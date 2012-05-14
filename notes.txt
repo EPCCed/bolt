@@ -1,2 +1,0 @@
-Need to add option to resource that specifies if the account is required
-or not and where to get the default account ID from: 'group', 'none'
