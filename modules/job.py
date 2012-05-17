@@ -61,6 +61,9 @@ class Job(object):
             hms = time.split(":")
             self.__wallTime = float(hms[0]) + float(hms[1])/60 + \
                               float(hms[2])/3600
+        elif re.search("^[0-9]+\.[0-9]+$", str(time)) is not None:
+            # Just hours
+            self.__wallTime = float(time)
         elif re.search("^[0-9]+$", str(time)) is not None:
             # Just hours
             self.__wallTime = float(time)
@@ -90,9 +93,9 @@ class Job(object):
         if timeFormat == 'hms':
             t = float(self.__wallTime)
             h = int(t)
-            secs = (tfloat(h))*3600
+            secs = (t - float(h))*3600
             m = int(secs/60)
-            s = int(secsm*60)
+            s = int(secs - m*60)
             time = "{0}:{1}:{2}".format(h,m,s)
         elif timeFormat == 'hours':
             time = str(int(math.ceil(float(self.__wallTime))))
@@ -209,8 +212,8 @@ class Job(object):
         # Can we control the number of tasks per die?
         option = resource.taskPerDieOption
         coresPerDie = 1
-        if option != (None or ""):
-            if (self.pTasksPerNode % resource.coresPerDie) == 0:
+        if (option != "") and (option is not None) and (self.pTasksPerNode > 1):
+            if (self.pTasksPerNode % resource.diesPerSocket) == 0:
                 coresPerDie = self.pTasksPerNode / (resource.socketsPerNode*resource.diesPerSocket)
                 runline = "{0} {1} {2}".format(runline, option, coresPerDie)
                 
@@ -274,12 +277,14 @@ class Job(object):
         # Check we do not have more tasks per node than tasks
         if self.pTasksPerNode > self.pTasks:
             tpn = min(self.pTasks, resource.numCoresPerNode())
-            printWarning("Number of specified parallel tasks per node ({0}) is greater than the number of specified parallel tasks ({1}). Reducing tasks per node to {2}.".format(self.pTasksPerNode, self.pTasks, tpn))
+            error.printWarning("Number of specified parallel tasks per node ({0}) is greater than the number of specified parallel tasks ({1}). Reducing tasks per node to {2}.".format(self.pTasksPerNode, self.pTasks, tpn))
+            self.setTasksPerNode(tpn)
 
         # Check the number of tasks per node
         if self.pTasksPerNode > resource.numCoresPerNode():
             tpn = resource.numCoresPerNode()
-            printWarning("Number of specified parallel tasks per node ({0}) is greater than number available for resource {1} ({2}). Reducing tasks per node to {3}.".format(self.pTasksPerNode, resource.name, resource.numCoresPerNode(), tpn))
+            error.printWarning("Number of specified parallel tasks per node ({0}) is greater than number available for resource {1} ({2}). Reducing tasks per node to {3}.".format(self.pTasksPerNode, resource.name, resource.numCoresPerNode(), tpn))
+            self.setTasksPerNode(resource.numCoresPerNode())
 
         # Check the total number of tasks
         # Number of nodes needed for this job
