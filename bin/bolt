@@ -12,6 +12,19 @@ Limitations:
 
 OPTIONS
 
+-a,--account <account>   Specify the account to charge the job to. If
+                         not specified then it is not included in the
+                         output.
+                         
+-b,--batch <batch>       Specify the batch system to create job submission
+                         script for. Default is specified by the resource
+                         configuration. Use the '-l' option to list valid
+                         values.
+                         
+-h,--help                Show this help.
+
+-l,--list                List the resources and batch systems available.
+
 -n,--tasks <n>           Number of parallel tasks. Defaults to 1. If
                          number of parallel tasks is 1 then the tool
                          will try to produce a serial job submission
@@ -21,30 +34,21 @@ OPTIONS
                          the minimum of the number of tasks or the number
                          of cores per node for the specified resource.
 
--t,--job-time <hh:mm:ss> Specify the wallclock limit for the job.
-
--a,--account <account>   Specify the account to charge the job to. If
-                         not specified then it is not included in the
-                         output.
-
--q,--queue <queue>       Specify the queue to submit the job to. This 
-                         will usually be set correctly by default.
+-o,--output <filename>   The output filename to use. The default is
+                         "a.bolt".
 
 -p,--force-parallel      Force the tool to create a parallel job even if
                          the number of tasks is 1.
 
--l,--list                List the resources and batch systems available.
+-q,--queue <queue>       Specify the queue to submit the job to. This 
+                         will usually be set correctly by default.
 
 -r,--resource <resource> Specify the resource to create a job submission
                          script for. Default is set by the install system.
                          Use the '-l' option to list valid values.
 
--b,--batch <batch>       Specify the batch system to create job submission
-                         script for. Default is specified by the resource
-                         configuration. Use the '-l' option to list valid
-                         values.
+-t,--job-time <hh:mm:ss> Specify the wallclock limit for the job.
 
--h,--help                Show this help.
 """
 __author__ =  'Andrew Turner, EPCC'
 __version__=  '0.2'
@@ -202,15 +206,15 @@ def main(argv):
 	# Set default job options
         #=======================================================
 	# If output file name is specified then write to it - otherwise
-	# use STDOUT
+	# use "a.bolt"
 	if outputFileName is None: 
-		outputFile = sys.stdout
-	else:
-		# Try to open the output file
-                try:
-			outputFile = open(outputFileName, "w")
-		except IOError as (errno, strerror):
-			error.handleError("Opening output file: {0}; {1}".format(outputFileName, strerror), errno)
+		outputFileName = "a.bolt"
+
+	# Try to open the output file
+        try:
+		outputFile = open(outputFileName, "w")
+	except IOError as (errno, strerror):
+		error.handleError("Opening output file: {0}; {1}".format(outputFileName, strerror), errno)
 
 	# If no resource or batch systems are specified then use the defaults
 	if selectedResource is None: selectedResource = resources[resourceDict[defaultResource]].name
