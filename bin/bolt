@@ -184,7 +184,7 @@ def main(argv):
 			# Test if we know the specified resource
 			if selectedResource not in resourceDict:
 				error.handleError("Resource not found: {0}. Known resources are {1}\n".format(selectedResource, resourceDict.keys()))
-		if opt in ("-s:, "--submit"):
+		if opt in ("-s", "--submit"):
 			submitJob = True
 		if opt in ("-b", "--batch"):
 			selectedBatch = arg
