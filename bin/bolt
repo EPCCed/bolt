@@ -47,6 +47,9 @@ OPTIONS
                          script for. Default is set by the install system.
                          Use the '-l' option to list valid values.
 
+-s,--submit              Submit the created job submission script to the
+			 batch system. Default is not to submit job.
+			 
 -t,--job-time <hh:mm:ss> Specify the wallclock limit for the job.
 
 """
@@ -126,13 +129,13 @@ def main(argv):
 			try:
 				index = batchDict[name]
 			except KeyError:
-				error.handleError("\nBatch system not found: {0}. Known systems are {1}\n".format(name, batchDict.keys()))
+				error.handleError("Batch system not found: {0}. Known systems are {1}\n".format(name, batchDict.keys()))
         if nResource == 0:
-		error.handleError("\nNo resources defined in {0}.\n".format(resourceConfigDir))
+		error.handleError("No resources defined in {0}.\n".format(resourceConfigDir))
 
         # Check that the default resource has been defined
 	if defaultResource not in resourceDict:
-		error.handleError("\nDefault resource not found: {0}. Known resources are {1}\n".format(defaultResource, resourceDict.keys()))
+		error.handleError("Default resource not found: {0}. Known resources are {1}\n".format(defaultResource, resourceDict.keys()))
 		exit(1)
                 
         # Create the job object
@@ -143,16 +146,17 @@ def main(argv):
         #=======================================================
 	# Read the command-line options
 	try:
-                opts, args = getopt.getopt(argv, "n:N:A:t:o:r:b:q:plh", \
+                opts, args = getopt.getopt(argv, "n:N:A:t:o:r:b:q:plsh", \
 			       ["tasks=","tasks-per-node=","account=","job-time=", \
                                 "output-file=","resource=","batch=","queue=", \
-                                "force-parallel","list","help"])
+                                "force-parallel","list","submit","help"])
 	except getopt.GetoptError:
-	 	error.handleError("\n**ERROR: Could not parse command line options\n")
+	 	error.handleError("Could not parse command line options\n")
 
 	# Set the initial values
 	taskPerNodeSpecified = False
 	forceParallel = False
+	submitJob = False
 	outputFileName = None
 	outputFile = None
 	selectedResource = None
@@ -179,14 +183,14 @@ def main(argv):
 			selectedResource = arg
 			# Test if we know the specified resource
 			if selectedResource not in resourceDict:
-				error.handleError("\nResource not found: {0}. Known resources are {1}\n".format(selectedResource, resourceDict.keys()))
-				exit(1)
+				error.handleError("Resource not found: {0}. Known resources are {1}\n".format(selectedResource, resourceDict.keys()))
+		if opt in ("-s:, "--submit"):
+			submitJob = True
 		if opt in ("-b", "--batch"):
 			selectedBatch = arg
 			# Test if we know the specified batch system
 			if selectedBatch not in batchDict:
-				error.handleError("\nBatch system not found: {0}. Known systems are {1}\n".format(selectedBatch, batchDict.keys()))
-				exit(1)
+				error.handleError("Batch system not found: {0}. Known systems are {1}\n".format(selectedBatch, batchDict.keys()))
                 if opt in ("-l", "--list"):
 			listResources(resources, defaultResource)
 			listBatch(batches, resources[resourceDict[defaultResource]].batch)
@@ -208,6 +212,7 @@ def main(argv):
 	# If output file name is specified then write to it - otherwise
 	# use "a.bolt"
 	if outputFileName is None: 
+		error.printWaring("Using default output file name: a.bolt")
 		outputFileName = "a.bolt"
 
 	# Try to open the output file
@@ -224,23 +229,33 @@ def main(argv):
         resource = resources[resourceDict[selectedResource]]
 
         # Default job name is the name of the executable
-        if job.name is None: job.setName(args[0])
+        if job.name is None:
+        	error.printWarning("Setting job name to: " + args[0])
+        	job.setName(args[0])
 
         # Default wall time is 5 minutes
-        if job.wallTime is None: job.setWallTime("0:5:0")
+        if job.wallTime is None: 
+        	error.printWarning("Using default job walltime of 5 mins")
+        	job.setWallTime("0:5:0")
 
         # Default number of tasks is 1
-	if job.pTasks == 0: job.setTasks(1)
+	if job.pTasks == 0:
+		error.printWarning("Setting number of parallel tasks to 1")
+		job.setTasks(1)
 
         # Default cores per node comes from the resource
-	if job.pTasksPerNode == 0: job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
+	if job.pTasksPerNode == 0:
+		error.printWarning("Setting number of tasks per node to " + resource.numCoresPerNode())
+		job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
         if (job.accountID == "") or (job.accountID is None):
                 if resource.defaultAccount == "group":
                         # Get account from *nix group
                         grpinfo = grp.getgrgid(os.getgid())
                         job.setAccountID(grpinfo[0])
-                elif (resource.defaultAccount != "") or (resource.defaultAccount is None):
+                        error.printWarning("Setting accounting code to " + grpinfo[0])
+                elif (resource.defaultAccount != "") or (resource.defaultAccount is not None):
                         job.setAccountID(resource.defaultAccount)
+                        error.printWarning("Setting accounting code to " + resource.defaultAccount)
 
         # Default queues if needed
 	if job.isParallel:
@@ -295,6 +310,13 @@ def main(argv):
 
         # Close the file if we need to
 	if outputFileName is not None: outputFile.close()
+	
+	#=======================================================
+	# Submit the job if required
+        #=======================================================
+        if submitJob:
+        	sys.stderr.write("Submitting job...\n")
+        	subprocess.call([batches[batchDict[selectedBatch]].submitCommand, outputFileName])
 
 	# Finish nicely
 	exit(0)
