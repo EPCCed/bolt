@@ -3,6 +3,7 @@
 #
 [system info]
 name: SLURM_Bull
+submit command: sbatch
 
 [basic options]
 option identifier: #MSUB
