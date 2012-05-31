@@ -3,6 +3,7 @@
 
 [system info]
 name: SGE
+submit command: qsub
 
 [basic options]
 option identifier: #$
