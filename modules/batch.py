@@ -11,6 +11,7 @@ class Batch(object):
     def __init__(self):
         """The default constructor - setup an empty batch system"""
         self.__name = ""
+        self.__submitCommand = None
 
         self.__optionID = None
         self.__nameOption = None
@@ -34,6 +35,11 @@ class Batch(object):
     def name(self):
         """The batch system name"""
         return self.__name
+    # Batch system info
+    @property
+    def submitCommand(self):
+        """The command used to submit a batch job"""
+        return self.__submitCommand
 
     # Batch system options
     @property
@@ -121,6 +127,7 @@ class Batch(object):
 
         # Get the batch information options
         self.__name = batchConfig.get("system info", "name")
+        self.__submitCommand = batchConfig.get("system info", "submit command")
 
         # Get the batch options
         self.__optionID = batchConfig.get("basic options", "option identifier")
