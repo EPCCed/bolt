@@ -212,7 +212,7 @@ def main(argv):
 	# If output file name is specified then write to it - otherwise
 	# use "a.bolt"
 	if outputFileName is None: 
-		error.printWaring("Using default output file name: a.bolt")
+		error.printWarning("Using default output file name: a.bolt")
 		outputFileName = "a.bolt"
 
 	# Try to open the output file
