@@ -245,7 +245,7 @@ def main(argv):
 
         # Default cores per node comes from the resource
 	if job.pTasksPerNode == 0:
-		error.printWarning("Setting number of tasks per node to " + resource.numCoresPerNode())
+		error.printWarning("Setting number of tasks per node to " + str(resource.numCoresPerNode()))
 		job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
         if (job.accountID == "") or (job.accountID is None):
                 if resource.defaultAccount == "group":
