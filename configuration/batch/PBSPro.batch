@@ -24,6 +24,9 @@
 [system info]
 name: PBSPro
 
+# This option sets the name of the command used to submit the job
+submit command: qsub
+
 #-------------------------------------------------------------
 # Basic options
 #
