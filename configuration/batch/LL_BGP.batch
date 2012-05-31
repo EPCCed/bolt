@@ -3,6 +3,7 @@
 #
 [system info]
 name: LL_BGP
+submit command: llsubmit
 
 [basic options]
 option identifier:  #@
