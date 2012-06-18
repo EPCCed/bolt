@@ -89,7 +89,7 @@ script postamble:
 # The option to specify the serial walltime. If this does not end
 # with = or : then a space will be placed between this 
 # and the actual walltime specified.
-time option:        -l h_rt=
+time option:        -l cput=
 
 # Any additional options to add for parallel jobs. Note these
 # should be specified without the option identifier as this
