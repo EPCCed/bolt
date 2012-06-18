@@ -45,6 +45,8 @@ OPTIONS
                          
 -h,--help                Show this help.
 
+-i,--info                Display the program licence and warranty.
+
 -l,--list                List the resources and batch systems available.
 
 -n,--tasks <n>           Number of parallel tasks. Defaults to 1. If
@@ -73,7 +75,6 @@ OPTIONS
 			 batch system. Default is not to submit job.
 			 
 -t,--job-time <hh:mm:ss> Specify the wallclock limit for the job.
-
 """
 __author__ =  'Andrew Turner, EPCC'
 __version__=  '0.2'
@@ -100,6 +101,11 @@ import ConfigParser
 import grp
 
 def main(argv):
+
+        #=======================================================
+	# Print out the banner
+        #=======================================================
+        sys.stdout.write("\n====\nbolt\n====\nCopyright 2012  EPCC, University of Edinburgh\nThis program comes with ABSOLUTELY NO WARRANTY; for details type `bolt -i'.\n This is free software, and you are welcome to redistribute it\nunder certain conditions; type `bolt -i' for details.\n\n")
 
         #=======================================================
 	# Global configuration section
@@ -168,10 +174,10 @@ def main(argv):
         #=======================================================
 	# Read the command-line options
 	try:
-                opts, args = getopt.getopt(argv, "n:N:A:t:o:r:b:q:plsh", \
+                opts, args = getopt.getopt(argv, "n:N:A:t:o:r:b:q:plshi", \
 			       ["tasks=","tasks-per-node=","account=","job-time=", \
                                 "output-file=","resource=","batch=","queue=", \
-                                "force-parallel","list","submit","help"])
+                                "force-parallel","list","submit","help","info"])
 	except getopt.GetoptError:
 	 	error.handleError("Could not parse command line options\n")
 
@@ -219,6 +225,9 @@ def main(argv):
 			exit(0)
                 if opt in ("-h", "--help"):
 			printHelp(rootDir)
+			exit(0)
+                if opt in ("-i", "--info"):
+			printLicence(rootDir)
 			exit(0)
 
         # Check that we have an executable name to use
@@ -397,6 +406,14 @@ def printHelp(rootDir):
               str rootDir - The root install directory of the tool.
         """
         subprocess.call(["pydoc", rootDir + "/bin/bolt"])
+
+def printLicence(rootDir):
+	"""Print licence for the tool.
+           
+           Arguments:
+              str rootDir - The root install directory of the tool.
+        """
+        subprocess.call(["cat", rootDir + "/COPYING"])
 
 if __name__ == "__main__":
         main(sys.argv[1:])

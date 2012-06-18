@@ -69,6 +69,7 @@ in a sub-script.
                               configuration. Use the '-l' option to list valid
                               values.
 + -h,--help                :: Show this help.
++ -i,--info                :: Print the program licence and warranty.
 + -l,--list                :: List the resources and batch systems available.
 + -n,--tasks <n>           :: Number of parallel tasks. Defaults to 1. If
                               number of parallel tasks is 1 then the tool
