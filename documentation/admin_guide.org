@@ -14,11 +14,85 @@
 #+LINK_HOME: 
 
 'bolt' is a tool for generating batch job submission scripts that presents
-a common interface to user no matter what the underlying architecture is.
+a common interface to user no matter what the underlying architecture 
+is and which batch submission system is used.
+
+The tool can also cross-generate scripts for architectures that are different
+from the local resource.
+
+Note that the bolt tool is distributed under the
+[[http://www.gnu.org/licenses/gpl-3.0.txt][GNU General Public License v3.0]]
 
 * Installation
 
+** Download the tool
+
+The tool can be downloaded from GitHub at:
+
+https://github.com/aturner-epcc/bolt.git
+
+The directory structure should be installed somewhere that is readable by
+all users.
+
+The root of the installation will be referred to as /$BOLT_DIR/ for the
+remainder of this documentation.
+
+** Setup user's environment
+
+In order for the tool to work you need to prepend the directory:
+
+#+BEGIN_SRC BASH
+$BOLT_DIR/module
+#+END_SRC
+
+to the /$PYTHONPATH/ environment variable for all users. The directory:
+
+#+BEGIN_SRC BASH
+$BOLT_DIR/bin
+#+END_SRC
+
+with also need to be prepended to the /$PATH/ environment variable for
+all users.
+
+Often, the most convenient way to do this is to use the 'modules' 
+environment.
+
 * Configuration
 
+To configure bolt for your compute resource you will need to create or
+modify files in the 
+
+#+BEGIN_SRC BASH
+$BOLT_DIR/configuration
+#+END_SRC
+
+directory. There are three configuration files which will need to be 
+created or modified:
+
+1. The /resource/ configuration file - this describes the layout of your
+   compute resource (node count, compute node configuration, time limits ,
+   /etc./). This file is in '$BOLT_DIR/configuration/resource'. Files must
+   have the '.resource' extension to be recognised by the tool.
+2. The /batch/ configuration file - this describes the setup of your
+   batch system (option names, /etc./). This file is in
+   '$BOLT_DIR/configuration/batch'. Files must have the '.batch' extension
+   to be recognised by the tool.
+3. The global configuration file - sets the default options for this 
+   installation. This file is '$BOLT_DIR/configuration/global.config'.
+
+There are a number of example configuration files in the distribution which
+may provide a useful starting point for creating your configuration. In
+particular, the files 'HECToR.resource' and 'PBSPro.batch' have been 
+extensively annotated to help explain the meanings of all the settings.
+
 * Layout
+
+The 'bolt' distribution contains a number of subdirectories:
+
++ bin/ :: Contains the bolt program
++ configuration/ :: All the configuration files for bolt
++ documentation/ :: User and Administrator manuals
++ modules/       :: Python modules that represent a job, resource, batch
+		    system and handle errors
+
 
