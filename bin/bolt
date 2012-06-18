@@ -105,7 +105,14 @@ def main(argv):
         #=======================================================
 	# Print out the banner
         #=======================================================
-        sys.stdout.write("\n====\nbolt\n====\nCopyright 2012  EPCC, University of Edinburgh\nThis program comes with ABSOLUTELY NO WARRANTY; for details type `bolt -i'.\n This is free software, and you are welcome to redistribute it\nunder certain conditions; type `bolt -i' for details.\n\n")
+        sys.stderr.write("===========================================================================\n")
+        sys.stderr.write("bolt\n")
+        sys.stderr.write("---------------------------------------------------------------------------\n")
+        sys.stderr.write("Copyright 2012  EPCC, University of Edinburgh\n")
+        sys.stderr.write("This program comes with ABSOLUTELY NO WARRANTY; for details type `bolt -i'.\n")
+        sys.stderr.write("This is free software, and you are welcome to redistribute it\n")
+        sys.stderr.write("under certain conditions; type `bolt -i' for details.\n")
+        sys.stderr.write("===========================================================================\n")
 
         #=======================================================
 	# Global configuration section
