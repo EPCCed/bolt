@@ -1,0 +1,143 @@
+#+TITLE:     bolt User Guide
+#+AUTHOR:    Andrew Turner
+#+EMAIL:     a.turner@epcc.ed.ac.uk
+#+DESCRIPTION: 
+#+KEYWORDS: 
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t ^:{}
+#+OPTIONS:   TeX:t LaTeX:nil skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:   
+#+LINK_HOME: 
+
+* bolt
+
+Produce job submission scripts using a common interface.
+
+** Summary
+
+This tool produces job submission scripts for a variety of compute
+resources and batch systems. It attempts to partition the work in a
+pseudo-optimal way and select sensible options. It will also include
+compusory options required on particular resources.
+
+** Limitations
+
++ Currently designed for MPI (or CAF/UPC) jobs only. Jobs that
+  use OpenMP threading are not supported.
+
+** Usage
+
+#+BEGIN_SRC bash
+bolt [options] executable_file arg1 arg2 ...
+#+END_SRC
+
+The /executable_file/ is the program or command you wish to run in your
+job submission script.
+
+Note: If you are specifying a parallel job then the program or command you
+specify will be appended to the parallel launch command (/e.g./ 'mpirun')
+so you cannot currently create jobs where the parallel launch command exists
+in a sub-script.
+
+** Options
+
++ -a,--account <account>   :: Specify the account to charge the job to. If
+                              not specified then it is not included in the
+                              output.
++ -b,--batch <batch>       :: Specify the batch system to create job submission
+                              script for. Default is specified by the resource
+                              configuration. Use the '-l' option to list valid
+                              values.
++ -h,--help                :: Show this help.
++ -l,--list                :: List the resources and batch systems available.
++ -n,--tasks <n>           :: Number of parallel tasks. Defaults to 1. If
+                              number of parallel tasks is 1 then the tool
+                              will try to produce a serial job submission
+                              script (unless the '-p' option is specified).
++ -N,--tasks-per-node <n>  :: Number of parallel tasks per node. Defaults to
+                              the minimum of the number of tasks or the number
+                              of cores per node for the specified resource.
++ -o,--output <filename>   :: The output filename to use. The default is
+                              "a.bolt".
++ -p,--force-parallel      :: Force the tool to create a parallel job even if
+                              the number of tasks is 1.
++ -q,--queue <queue>       :: Specify the queue to submit the job to. This 
+                              will usually be set correctly by default.
++ -r,--resource <resource> :: Specify the resource to create a job submission
+                              script for. Default is set by the install system.
+                              Use the '-l' option to list valid values.
++ -s,--submit              :: Submit the created job submission script to the
+			      batch system. Default is not to submit job.
++ -t,--job-time <hh:mm:ss> :: Specify the wallclock limit for the job.
+
+** Examples
+
+*** Serial jobs
+
+To create a serial job submission script to run the program 'postprocess.x'
+with the arguments 'input.file' and 'output.file' for 20 minutes you would use:
+
+#+BEGIN_SRC bash
+bolt -t 0:20:0 postprocess.x input.file output.file
+#+END_SRC
+
+You would then need to submit the job with the job submission command on your
+compute resource. To have bolt submit the job for you, you can add the '-s'
+option:
+
+#+BEGIN_SRC bash
+bolt -s -t 0:20:0 postprocess.x input.file output.file
+#+END_SRC
+
+If you wish to force your serial job to run in the parallel queues - for
+example, to use compute nodes which may be of a different architecture to 
+the nodes that run serial jobs you add the '-p' option:
+
+#+BEGIN_SRC bash
+bolt -p -t 0:20:0 postprocess.x input.file output.file
+#+END_SRC
+
+To specify the name of the job submission script to create you can use the 
+'-o' option:
+
+#+BEGIN_SRC bash
+bolt -p -t 0:20:0 -o post.bolt postprocess.x input.file output.file
+#+END_SRC
+
+(If you do not specify an output file name then the default 'a.bolt' will
+be used.)
+
+*** Parallel jobs
+
+To create a parallel job submission script to run the program 'castep' with 
+the argument 'alx3' over 2048 cores for 6 hours you would use:
+
+#+BEGIN_SRC bash
+bolt -t 6:0:0 -n 2048 castep alx3
+#+END_SRC
+
+If you wanted to specify the number of cores per node to use then you can
+use the '-N' option. For example, on a system with 32 cores per node we
+may want to use only 16 of them to allow extra memory for each parallel
+task:
+
+#+BEGIN_SRC bash
+bolt -t 6:0:0 -n 2048 -N 16 castep alx3
+#+END_SRC
+
+To specify the name of the job submission script to create you can use the 
+'-o' option:
+
+#+BEGIN_SRC bash
+bolt -t 6:0:0 -n 2048 -N 16 -o castep_job.bolt castep alx3
+#+END_SRC
+
+(If you do not specify an output file name then the default 'a.bolt' will
+be used.)
+
+** Bugs
+
+If you find any bugs please report them to [[epcc-support@epcc.ed.ac.uk]].

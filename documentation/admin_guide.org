@@ -1,0 +1,24 @@
+#+TITLE:     bolt Administrator's Guide
+#+AUTHOR:    Andrew Turner
+#+EMAIL:
+#+DATE:      June 2012
+#+DESCRIPTION: 
+#+KEYWORDS: 
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:nil skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:   
+#+LINK_HOME: 
+
+'bolt' is a tool for generating batch job submission scripts that presents
+a common interface to user no matter what the underlying architecture is.
+
+* Installation
+
+* Configuration
+
+* Layout
+
