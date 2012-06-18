@@ -1,4 +1,23 @@
-#+TITLE:     bolt User Guide
+#----------------------------------------------------------------------
+# Copyright 2012 EPCC, The University of Edinburgh
+#
+# This file is part of bolt.
+#
+# bolt is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# bolt is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with bolt.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+#
+#+TITLE:     bolt User's Guide
 #+AUTHOR:    Andrew Turner
 #+EMAIL:     a.turner@epcc.ed.ac.uk
 #+DESCRIPTION: 
@@ -12,23 +31,21 @@
 #+LINK_UP:   
 #+LINK_HOME: 
 
-* bolt
-
 Produce job submission scripts using a common interface.
 
-** Summary
+* Summary
 
 This tool produces job submission scripts for a variety of compute
 resources and batch systems. It attempts to partition the work in a
 pseudo-optimal way and select sensible options. It will also include
 compusory options required on particular resources.
 
-** Limitations
+* Limitations
 
 + Currently designed for MPI (or CAF/UPC) jobs only. Jobs that
   use OpenMP threading are not supported.
 
-** Usage
+* Usage
 
 #+BEGIN_SRC bash
 bolt [options] executable_file arg1 arg2 ...
@@ -42,7 +59,7 @@ specify will be appended to the parallel launch command (/e.g./ 'mpirun')
 so you cannot currently create jobs where the parallel launch command exists
 in a sub-script.
 
-** Options
+* Options
 
 + -a,--account <account>   :: Specify the account to charge the job to. If
                               not specified then it is not included in the
@@ -73,9 +90,9 @@ in a sub-script.
 			      batch system. Default is not to submit job.
 + -t,--job-time <hh:mm:ss> :: Specify the wallclock limit for the job.
 
-** Examples
+* Examples
 
-*** Serial jobs
+** Serial jobs
 
 To create a serial job submission script to run the program 'postprocess.x'
 with the arguments 'input.file' and 'output.file' for 20 minutes you would use:
@@ -110,7 +127,7 @@ bolt -p -t 0:20:0 -o post.bolt postprocess.x input.file output.file
 (If you do not specify an output file name then the default 'a.bolt' will
 be used.)
 
-*** Parallel jobs
+** Parallel jobs
 
 To create a parallel job submission script to run the program 'castep' with 
 the argument 'alx3' over 2048 cores for 6 hours you would use:
@@ -138,6 +155,6 @@ bolt -t 6:0:0 -n 2048 -N 16 -o castep_job.bolt castep alx3
 (If you do not specify an output file name then the default 'a.bolt' will
 be used.)
 
-** Bugs
+* Bugs
 
 If you find any bugs please report them to [[epcc-support@epcc.ed.ac.uk]].
