@@ -1,6 +1,16 @@
 #!/usr/bin/python
 #
-# bolt job submission script production tool
+#===============================================================
+# Simple Job Submission Tool
+#
+# Submit jobs to different compute resource batch systems using
+# a common interface. Tries to optimally distribute parallel
+# tasks across nodes.
+#===============================================================
+#
+#===============================================================
+# v0.3 - Added GPL
+#===============================================================
 #
 #----------------------------------------------------------------------
 # Copyright 2012 EPCC, The University of Edinburgh
@@ -76,18 +86,9 @@ OPTIONS
 			 
 -t,--job-time <hh:mm:ss> Specify the wallclock limit for the job.
 """
-__author__ =  'Andrew Turner, EPCC'
-__version__=  '0.2'
+__author__  =  'Andrew Turner, EPCC, The University of Edinburgh'
+__version__ =  '0.3'
 
-#===============================================================
-# Simple Job Submission Tool
-#
-# Submit jobs to different compute resource batch systems using
-# a common interface. Tries to optimally distribute parallel
-# tasks across nodes.
-#
-# A. R. Turner, EPCC, 2012
-#===============================================================
 from resource import Resource
 from batch import Batch
 from job import Job
@@ -106,9 +107,9 @@ def main(argv):
 	# Print out the banner
         #=======================================================
         sys.stderr.write("===========================================================================\n")
-        sys.stderr.write("bolt\n")
+        sys.stderr.write("bolt " + __version__ + "\n")
         sys.stderr.write("---------------------------------------------------------------------------\n")
-        sys.stderr.write("Copyright 2012  EPCC, University of Edinburgh\n")
+        sys.stderr.write("Copyright 2012  EPCC, The University of Edinburgh\n")
         sys.stderr.write("This program comes with ABSOLUTELY NO WARRANTY; for details type `bolt -i'.\n")
         sys.stderr.write("This is free software, and you are welcome to redistribute it\n")
         sys.stderr.write("under certain conditions; type `bolt -i' for details.\n")
