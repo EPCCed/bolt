@@ -9,6 +9,7 @@
 #===============================================================
 #
 #===============================================================
+# v0.4 - Added option to distribute tasks using batch system
 # v0.3 - Added GPL
 #===============================================================
 #
@@ -87,7 +88,7 @@ OPTIONS
 -t,--job-time <hh:mm:ss> Specify the wallclock limit for the job.
 """
 __author__  =  'Andrew Turner, EPCC, The University of Edinburgh'
-__version__ =  '0.3'
+__version__ =  '0.4'
 
 from resource import Resource
 from batch import Batch
@@ -264,8 +265,9 @@ def main(argv):
 	if selectedResource is None: selectedResource = resources[resourceDict[defaultResource]].name
 	if selectedBatch is None: selectedBatch = resources[resourceDict[selectedResource]].batch
 
-        # For convenience, set the selected resource
+        # For convenience, set the selected resource and batch system
         resource = resources[resourceDict[selectedResource]]
+        batch = batches[batchDict[selectedBatch]]
 
         # Default job name is the name of the executable
         if job.name is None:
@@ -336,16 +338,14 @@ def main(argv):
                 job.setJobCommand(' '.join(args))
 		# For parallel jobs we need to compute the pseudo-optimal distribution of
 		# tasks and set the parallel job launcher command
-		job.setParallelRunLine(resource)
+		job.setParallelDistribution(resource, batch)
 		# Write the parallel job script
-		job.writeParallelJob(batches[batchDict[selectedBatch]], \
-                                 resource, outputFile)
+		job.writeParallelJob(batch, resource, outputFile)
 	else:
 		# Job command is the remaining arguments
                 job.setJobCommand(' '.join(args))
 		# Write the parallel job script
-		job.writeSerialJob(batches[batchDict[selectedBatch]], \
-                                 resource, outputFile)
+		job.writeSerialJob(batch, resource, outputFile)
 
         # Close the file if we need to
 	if outputFileName is not None: outputFile.close()
@@ -355,7 +355,7 @@ def main(argv):
         #=======================================================
         if submitJob:
         	sys.stderr.write("Submitting job...\n")
-        	subprocess.call([batches[batchDict[selectedBatch]].submitCommand, outputFileName])
+        	subprocess.call([batch.submitCommand, outputFileName])
 
 	# Finish nicely
 	exit(0)

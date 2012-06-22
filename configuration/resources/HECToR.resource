@@ -141,6 +141,8 @@ preferred task stride:      2        ; tasks
 parallel reservation unit:  tasks    ; can be 'tasks' or 'nodes'
 
 # The parallel job launcher command (for example, 'mpiexec' or 'aprun')
+# If this is unset then we assume that the batch system automatically
+# launches the parallel job.
 parallel job launcher:      aprun
 
 # The command line option to the job launcher command that specifies
@@ -170,25 +172,12 @@ tasks stride option:        -d
 # no queue name is needed)
 queue name:
 
-# The batch system option used to specify the amount of parallel resource
-# to request. It is used in combination with the batch option ID, parallel
-# request option and number of parallel units (tasks or nodes) to 
-# reserve the correct amount of parallel resource. If this option soes
-# not end with '=' or ':' then a space is added between the option and
-# the number of parallel units.
-#
-# For example, with PBS Pro the batch option ID is '#PBS' the parallel
-# request option is '-l' # and this option is 'mppwidth=' so the full
-# line is
-#
-#    #PBS -l mppwidth=<ntasks>
-#
-# and with SGE the option ID is '#$' the parallel request option is
-# '-pe' and this option could be 'mpich', so the full line would be
-#
-#   #$ -pe mpich <ntasks>
-#
-parallel allocation option: mppwidth=
+# Do we want to use the batch system to specify the distribution of
+# tasks? This is only usually needed if your system does not have 
+# an explicit parallel job launcher command and the batch system 
+# launches the parallel job instead (for example, LoadLeveller on
+# some IBM Power systems)
+use batch parallel options: False
 
 # Any addtional batch submission options to add to parallel
 # jobs (without the option ID).

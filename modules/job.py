@@ -42,6 +42,7 @@ class Job(object):
         self.__pTasksPerDie = 0
         self.__threads = 0
         self.__runLine = None
+        self.__pBatchOptions = None
         self.__batchOptions = None
         self.__scriptPreamble = None
         self.__scriptPostamble = None
@@ -49,7 +50,7 @@ class Job(object):
         self.__accountID = None
 
     #======================================================================
-    # Propertiesgetters and setters
+    # Properties getters and setters
     @property
     def name(self):
         """str The job name"""
@@ -195,57 +196,135 @@ class Job(object):
         """str The command used to launch the application. For example,
                   'mpiexec'"""
         return self.__runLine
-    def setParallelRunLine(self, resource):
+    @property
+    def pBatchOptions(self):
+        """str Any parallel batch options needed to run the job."""
+        return self.__pBatchOptions
+
+    def setParallelDistribution(self, resource, batch):
         """This method distributes the tasks optimally for the specified
            resource. If any errors are encountered then an error message
            is printed and the program stops.
 
+           Tasks can either be ditributed using options to a parallel job
+           launcher (e.g. mpiexec), by the options passed to the batch
+           system, or by using both methods.
+
            Arguments:
-              Resource resourceThe resource to use for the task
+              Resource resource   The resource to use for the task
+                                  distribution
+              Resource batch      The batch system to use for the task
                                   distribution
         """
 
-        # Most basic is just the parallel command and number of tasks
-        option = resource.parallelTaskOption
-        if option == (None or ""):
-            error.handleError("The parallel task option is not set.\n", 1)
+
+        # First compute all the values we might need
+        # Number of nodes needed
+        nodesUsed = self.pTasks / self.pTasksPerNode
+        if (self.pTasks % self.pTasksPerNode) > 0:
+            nodesUsed += 1
+        # Number of cores used per die
+        coresPerDieUsed = resource.diesPerSocket
+        if (self.pTasksPerNode % resource.diesPerSocket) == 0:
+            coresPerDieUsed = self.pTasksPerNode / (resource.socketsPerNode*resource.diesPerSocket)
+        # Task stride - if we have enough spare cores use the preferred stride
+        strideUsed = 1
+        if (resource.coresPerDie / coresPerDieUsed) >= resource.preferredStride:
+            strideUsed = resource.preferredStride
+            
+
+        # Test to see if we have a parallel run command
+        runCommand = resource.parallelJobLauncher
+        useRunCommand = True
+        if (runCommand == None) or (runCommand == ""):
+            useRunCommand = False
+            # No job launcher command, are we using batch options instead?
+            if not resource.useBatchParallelOpts:
+                error.handleError("No parallel run command or batch options to use.\n", 1)
+
+        runLine = ""
+        pBatchOptions = ""
+
+        #-------------------------------------------------------------------------------------------
+        # Settings for using parallel job launcher
+        if useRunCommand:
+
+            # Most basic is just the parallel command and number of tasks
+            option = resource.parallelTaskOption
+            if (option is None) or (option == ""):
+                error.handleError("The job launcher parallel task option is not set.\n", 1)
+            elif self.pTasks == 0:
+                error.handleError("The number of parallel tasks has not been set.\n", 1)
+            runline = "{0} {1} {2}".format(resource.parallelJobLauncher, option, self.pTasks)
+
+            # Can we control the nodes used?
+            option = resource.nodesOption
+            if ((option != "") and (option is not None)) and (self.pTasksPerNode > 0):
+                runline = "{0} {1} {2}".format(runline, option, nodesUsed)
+
+            # Can we control the number of tasks per node?
+            option = resource.taskPerNodeOption
+            if ((option != "") and (option is not None)) and (self.pTasksPerNode > 0):
+                runline = "{0} {1} {2}".format(runline, option, self.pTasksPerNode)
+
+            # Can we control the number of tasks per die?
+            option = resource.taskPerDieOption
+            if ((option != "") and (option is not None)) and (self.pTasksPerNode > 1):
+                runline = "{0} {1} {2}".format(runline, option, coresPerDieUsed)
+                
+            # Can we control the stride
+            option = resource.taskStrideOption
+            if (option is not None) and (option != ""):
+                runline = "{0} {1} {2}".format(runline, option, strideUsed) 
+            
+            self.__runLine = runline
+
+
+        #-------------------------------------------------------------------------------------------
+        # Settings for using parallel batch options
+        # Most basic is just the parallel option and number of tasks/nodes. All jobs use this.
+        option = batch.parallelOption
+        if (option == None) or (option == ""):
+            error.handleError("The batch parallel task option is not set.\n", 1)
         elif self.pTasks == 0:
             error.handleError("The number of parallel tasks has not been set.\n", 1)
-        runline = "{0} {1} {2}".format(resource.parallelJobLauncher, option, self.pTasks)
-
-        # Can we control the nodes used?
-        option = resource.nodesOption
-        if (option != "") and (option is not None) and (self.pTasksPerNode > 0):
-            # Number of nodes needed for this job
-            nodesUsed = self.pTasks / self.pTasksPerNode
-            if (self.pTasks % self.pTasksPerNode) > 0:
-                nodesUsed += 1
-            runline = "{0} {1} {2}".format(runline, option, nodesUsed)
-
-        # Can we control the number of tasks per node?
-        option = resource.taskPerNodeOption
-        if (option != "") and (option is not None) and (self.pTasksPerNode > 0):
-            runline = "{0} {1} {2}".format(runline, option, self.pTasksPerNode)
-
-        # Can we control the number of tasks per die?
-        option = resource.taskPerDieOption
-        coresPerDie = 1
-        if (option != "") and (option is not None) and (self.pTasksPerNode > 1):
-            if (self.pTasksPerNode % resource.diesPerSocket) == 0:
-                coresPerDie = self.pTasksPerNode / (resource.socketsPerNode*resource.diesPerSocket)
-                runline = "{0} {1} {2}".format(runline, option, coresPerDie)
-                
-        # Can we control the stride
-        option = resource.taskStrideOption
-        if option != (None or ""):
-            if coresPerDie == 1:
-                runline = "{0} {1} {2}".format(runline, option, 1)
-            elif (resource.coresPerDie / coresPerDie) >= resource.preferredStride:
-                runline = "{0} {1} {2}".format(runline, option, resource.preferredStride)
+        pUnits = self.pTasks
+        # How are parallel resources allocated on this resource?
+        if resource.parallelBatchUnit == "tasks":
+            # Job allocated by tasks
+            # Do we have exclusive node access or not
+            if resource.nodeExclusive:
+                # Yes, we need number of tasks corresponding to full nodes
+                pUnits = nodesUsed * resource.numCoresPerNode()
             else:
-                runline = "{0} {1} {2}".format(runline, option, 1)
-            
-        self.__runLine = runline
+                # No, we just need number of parallel tasks
+                pUnits = self.pTasks
+        elif resource.parallelBatchUnit == "nodes":
+            # Job allocated by nodes
+            pUnits = nodesUsed
+        else:
+            error.handleError("Unit of resource: {0} is not defined (use 'tasks' or 'nodes') in resource configuration file for resource: {1}.\n".format(resource.parallelBatchUnit, resource.name))
+        # Set the option
+        pBatchOptions = "{0} {1}{2}\n".format(batch.optionID, option, pUnits)
+
+        # Additional options if we need them
+        if resource.useBatchParallelOpts:
+            # Can we control the number of tasks per node?
+            option = batch.taskPerNodeOption
+            if (option != "") and (option is not None) and (self.pTasksPerNode > 0):
+                pBatchOptions = "{0}{1} {2}{3}\n".format(pBatchOptions, batch.optionID, option, self.pTasksPerNode)
+
+            # Can we control the number of tasks per die?
+            option = batch.taskPerDieOption
+            if (option != "") and (option is not None) and (self.pTasksPerNode > 1):
+                pBatchOptions = "{0}{1} {2}{3}".format(pBatchOptions, batch.optionID, option, coresPerDieUsed)
+                
+            # Can we control the stride
+            option = batch.taskStrideOption
+            if (option is not None) or (option != ""):
+                pBatchOptions = "{0}{1} {2}{3}".format(pBatchOptions, batch.optionID, option, strideUsed) 
+
+        self.__pBatchOptions = pBatchOptions
 
     @property
     def scriptPreamble(self):
@@ -330,7 +409,7 @@ class Job(object):
            error.handleError("Requested walltime ({0}) longer than maximum allowed on resource {1} ({2} hours).".format(self.wallTime, resource.name, resource.maxJobTime))
 
     #======================================================================
-    # Writing methodswrite out the job
+    # Writing methods write out the job
     def writeParallelJob(self, batch, resource, scriptFile):
         """This function writes out a parallel job script for the specified
            resource. If errors are encountered then an error message is
@@ -359,32 +438,12 @@ class Job(object):
         scriptFile.write("#    Batch system: {0}\n#\n".format(batch.name))
         scriptFile.write("# bolt is written by EPCC (http://www.epcc.ed.ac.uk)\n#\n")
 
-        # Compute number of pUnits (either tasks or nodes)
-        pUnits = 0
-        # Number of nodes needed for this job
-        nodesUsed = self.pTasks / self.pTasksPerNode
-        if (self.pTasks % self.pTasksPerNode) > 0:
-            nodesUsed += 1
-        # Set the units
-        if resource.parallelBatchUnit == "tasks":
-            # Job allocated by tasks
-            # Do we have exclusive node access or not
-            if resource.nodeExclusive:
-                # Yes, we need number of tasks corresponding to full nodes
-                pUnits = nodesUsed * resource.numCoresPerNode()
-            else:
-                # No, we just need number of parallel tasks
-                pUnits = self.pTasks
-        elif resource.parallelBatchUnit == "nodes":
-            # Job allocated by nodes
-            pUnits = nodesUsed
-        else:
-            error.handleError("Unit of resource: {0} is not defined (use 'tasks' or 'nodes') in resource configuration file for resource: {1}.\n".format(resource.parallelBatchUnit, resource.name))
+        # Get the parallel batch options
+        scriptFile.write(self.pBatchOptions)
             
         # Get the batch options
-        text = batch.getParallelOptionLines(self.name, self.queueName, \
-                                            resource.parallelEnvOption, pUnits, \
-                                            self.getWallTime(resource), self.accountID)
+        text = batch.getOptionLines(True, self.name, self.queueName, \
+                                    self.getWallTime(resource), self.accountID)
         scriptFile.write(text)
 
         # Get any further options from resource configuration
@@ -441,8 +500,8 @@ class Job(object):
         scriptFile.write("# bolt is written by EPCC (http://www.epcc.ed.ac.uk)\n#\n")
 
         # Get the batch options
-        text = batch.getSerialOptionLines(self.name, self.queueName, \
-                                          self.getWallTime(resource), self.accountID)
+        text = batch.getOptionLines(False, self.name, self.queueName, \
+                                    self.getWallTime(resource), self.accountID)
         scriptFile.write(text)
 
         # Get any further options from resource configuration

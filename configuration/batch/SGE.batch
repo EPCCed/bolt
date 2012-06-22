@@ -30,7 +30,10 @@ account option:    -A
 queue option:      -q
 
 [parallel options]
-task option:        -pe
+parallel option:        -pe mpich
+task per node option:
+task per die option:
+task stride option:
 time option:        -l h_rt=
 additional options: -cwd -V
 script preamble:

@@ -51,7 +51,7 @@ tasks per node option:
 tasks per die option:
 tasks stride option:
 queue name:
-parallel allocation option:
+use batch parallel options: False
 additional job options:
 script preamble commands:
 script postamble commands:

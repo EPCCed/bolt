@@ -30,7 +30,10 @@ account option:
 queue option:       job_type =
 
 [parallel options]
-task option:        bg_size =
+parallel option:        bg_size =
+task per node option:
+task per die option:
+task stride option:
 time option:        wall_clock_limit =
 additional options: queue
 script preamble:

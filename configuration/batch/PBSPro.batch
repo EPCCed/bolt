@@ -77,7 +77,21 @@ queue option:      -q
 # This is usually combined with the parallel environment 
 # option from the resource configuration file to produce
 # the full command line.
-task option:        -l
+parallel option:        -l mppwidth=
+
+# Batch system option to specify the number of tasks per
+# node. Only needed if the batch system launches the parallel
+# job rather than using a job-launcher command such as
+# mpiexec.
+task per node option:
+
+# Batch system option to specify the number of tasks per
+# die.
+task per die option:
+
+# Batch system option to specify the preferred stride 
+# between parallel tasks.
+task stride option:
 
 # The option to specify the parallel walltime. If this does not end
 # with = or : then a space will be placed between this 

@@ -60,7 +60,7 @@ class Resource(object):
         self.__taskPerDieOption = None
         self.__taskStrideOption = None
         self.__parallelQueue = None
-        self.__parallelEnvOption = None
+        self.__useBatchParallelOpts = False
         self.__jobOption = None
         self.__parallelScriptPreamble = None
         self.__parallelScriptPostamble = None
@@ -197,11 +197,11 @@ class Resource(object):
         no queue will be specified in the submission script."""
         return self.__parallelQueue
     @property
-    def parallelEnvOption(self):
-        """The string to use when setting the number of parallel tasks. If
-        this ends with '=' then no space will be placed between this and 
-        the number of parallel units"""
-        return self.__parallelEnvOption
+    def useBatchParallelOpts(self):
+        """Choose whether to use the batch system options to distribute the
+        parallel tasks. Usually used when the system has no parallel job
+        launcher command."""
+        return self.__useBatchParallelOpts
     @property
     def jobOptions(self):
         """Any additional job options needed for parallel jobs"""
@@ -295,7 +295,7 @@ class Resource(object):
         self.__taskPerDieOption = resourceConfig.get("parallel jobs", "tasks per die option")
         self.__taskStrideOption = resourceConfig.get("parallel jobs", "tasks stride option")
         self.__parallelQueue = resourceConfig.get("parallel jobs", "queue name")
-        self.__parallelEnvOption = resourceConfig.get("parallel jobs", "parallel allocation option")
+        self.__useBatchParallelOpts = resourceConfig.getboolean("parallel jobs", "use batch parallel options")
         self.__jobOptions = resourceConfig.get("parallel jobs", "additional job options")
         self.__parallelScriptPreamble = resourceConfig.get("parallel jobs", "script preamble commands")
         self.__parallelScriptPostamble = resourceConfig.get("parallel jobs", "script postamble commands")
