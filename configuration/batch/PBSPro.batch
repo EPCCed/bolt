@@ -100,7 +100,8 @@ time option:        -l walltime=
 
 # Any additional options to add for parallel jobs. Note these
 # should be specified without the option identifier as this
-# will be added automatically.
+# will be added automatically. Multiple options should be 
+# separated by a ',' (comma).
 additional options:
 
 # Any script lines to include in parallel jobs before the

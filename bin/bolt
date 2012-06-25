@@ -288,7 +288,7 @@ def main(argv):
 	if job.pTasksPerNode == 0:
 		error.printWarning("Setting number of tasks per node to " + str(resource.numCoresPerNode()))
 		job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
-        if (job.accountID == "") or (job.accountID is None):
+        if (job.accountID == "") or (job.accountID is None) and (resource.accountRequired):
                 if resource.defaultAccount == "group":
                         # Get account from *nix group
                         grpinfo = grp.getgrgid(os.getgid())
@@ -312,10 +312,16 @@ def main(argv):
 	# If we have selected the number of tasks per node we need to see if this
         # option is supported on the specified resource
 	if taskPerNodeSpecified:
-		if (resource.taskPerNodeOption == "")   or \
-                   (resource.taskPerNodeOption == None):
-			error.printWarning("Tasks per node specified ({0}) but option is not supported on resource {1}. {2} will be used.".format(job.pTasksPerNode, resource.name, min(job.pTasks, resource.numCoresPerNode())))
-			job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
+		if resource.useBatchParallelOpts:
+			if (batch.taskPerNodeOption == "") or \
+                           (batch.taskPerNodeOption is None):
+				error.printWarning("Tasks per node specified ({0}) but option is not supported on resource {1}. {2} will be used.".format(job.pTasksPerNode, resource.name, min(job.pTasks, resource.numCoresPerNode())))
+				job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
+		else:
+			if (resource.taskPerNodeOption == "")   or \
+			   (resource.taskPerNodeOption == None):
+				error.printWarning("Tasks per node specified ({0}) but option is not supported on resource {1}. {2} will be used.".format(job.pTasksPerNode, resource.name, min(job.pTasks, resource.numCoresPerNode())))
+				job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
 
         # Check that we have specified a sensible number of tasks for a parallel job
 	if job.isParallel:

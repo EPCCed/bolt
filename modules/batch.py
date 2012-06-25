@@ -89,6 +89,7 @@ class Batch(object):
     @property
     def parallelOption(self):
         """The option used to specify the number of parallel units to use."""
+        if (len(self.__parallelOption) == 0): return ""
         if (self.__parallelOption.rfind("=") or self.__parallelOption.rfind(":")) == -1:
            return self.__parallelOption + " "
         else:
@@ -97,6 +98,7 @@ class Batch(object):
     def taskPerNodeOption(self):
         """The option used to specify the number of parallel tasks
         per node.."""
+        if (len(self.__taskPerNodeOption) == 0): return ""
         if (self.__taskPerNodeOption.rfind("=") or self.__taskPerNodeOption.rfind(":")) == -1:
            return self.__taskPerNodeOption + " "
         else:
@@ -105,6 +107,7 @@ class Batch(object):
     def taskPerDieOption(self):
         """The option used to specify the number of parallel tasks
         per die.."""
+        if (len(self.__taskPerDieOption) == 0): return ""
         if (self.__taskPerDieOption.rfind("=") or self.__taskPerDieOption.rfind(":")) == -1:
            return self.__taskPerDieOption + " "
         else:
@@ -112,6 +115,7 @@ class Batch(object):
     @property
     def taskStrideOption(self):
         """The option used to specify the stride for parallel task."""
+        if (len(self.__taskStrideOption) == 0): return ""
         if (self.__taskStrideOption.rfind("=") or self.__taskStrideOption.rfind(":")) == -1:
            return self.__taskStrideOption + " "
         else:
@@ -120,6 +124,7 @@ class Batch(object):
     def parallelTimeOption(self):
         """The option used to specify the job time. For example '-l walltime='
         for the PBS batch system"""
+        if (len(self.__parallelTimeOption) == 0): return ""
         if (self.__parallelTimeOption.rfind("=") or self.__parallelTimeOption.rfind(":")) == -1:
             return self.__parallelTimeOption + " "
         else:
@@ -141,6 +146,7 @@ class Batch(object):
     def serialTimeOption(self):
         """The option used to specify the job time. For example '-l h_rt='
         for the PBS batch system"""
+        if (len(self.__serialTimeOption) == 0): return ""
         if (self.__serialTimeOption.rfind("=") or self.__serialTimeOption.rfind(":")) == -1:
             return self.__serialTimeOption + " "
         else:
@@ -229,14 +235,20 @@ class Batch(object):
                    and (runtime != "") and (runtime is not None):
                         text = text + self.optionID + " " + self.parallelTimeOption + runtime + "\n"
                 if (self.parallelOptions != "") and (self.parallelOptions is not None):
-                        text = text + self.optionID + " " + self.parallelOptions + "\n"
+                    # Split out the parallel options
+                    options = self.parallelOptions.split(",")
+                    for option in options:
+                        text = text + self.optionID + " " + option + "\n"
             else:
                 # Serial options
                 if (self.serialTimeOption != "") and (self.serialTimeOption is not None) \
                    and (runtime != "") and (runtime is not None):
                         text = text + self.optionID + " " + self.serialTimeOption + runtime + "\n"
                 if (self.serialOptions != "") and (self.serialOptions is not None):
-                        text = text + self.optionID + " " + self.serialOptions + "\n"
+                    # Split out the parallel options
+                    options = self.serialOptions.split(",")
+                    for option in options:
+                        text = text + self.optionID + " " + option + "\n"
 
             text = text + "\n"
             return text

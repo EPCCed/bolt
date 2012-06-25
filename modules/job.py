@@ -316,13 +316,14 @@ class Job(object):
 
             # Can we control the number of tasks per die?
             option = batch.taskPerDieOption
-            if (option != "") and (option is not None) and (self.pTasksPerNode > 1):
+            if not ((option == "") or (option is None)) and (self.pTasksPerNode > 1):
                 pBatchOptions = "{0}{1} {2}{3}".format(pBatchOptions, batch.optionID, option, coresPerDieUsed)
                 
             # Can we control the stride
             option = batch.taskStrideOption
-            if (option is not None) or (option != ""):
+            if (option is not None) and (option != ""):
                 pBatchOptions = "{0}{1} {2}{3}".format(pBatchOptions, batch.optionID, option, strideUsed) 
+
 
         self.__pBatchOptions = pBatchOptions
 
@@ -458,10 +459,10 @@ class Job(object):
             scriptFile.write(self.scriptPreamble + "\n")
 
         # Parallel run line
+        scriptFile.write("# Run the parallel program\n")
         if self.runLine is None:
-            error.handleError("Run line has not yet been set.\n")
+            scriptFile.write(self.jobCommand + "\n")
         else:
-            scriptFile.write("# Run the parallel program\n")
             scriptFile.write(self.runLine + " " + self.jobCommand + "\n")
 
         # Script postambles: job -> batch -> resource
