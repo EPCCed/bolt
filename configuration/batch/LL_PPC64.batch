@@ -35,7 +35,7 @@ task per node option:  task_per_node =
 task per die option:
 task stride option:
 time option:           wall_clock_limit =
-additional options:    job_type = parallel,queue
+additional options:    job_type = parallel;queue
 script preamble:
 script postamble:
 
