@@ -236,7 +236,7 @@ class Batch(object):
                         text = text + self.optionID + " " + self.parallelTimeOption + runtime + "\n"
                 if (self.parallelOptions != "") and (self.parallelOptions is not None):
                     # Split out the parallel options
-                    options = self.parallelOptions.split(",")
+                    options = self.parallelOptions.split(";")
                     for option in options:
                         text = text + self.optionID + " " + option + "\n"
             else:
@@ -246,7 +246,7 @@ class Batch(object):
                         text = text + self.optionID + " " + self.serialTimeOption + runtime + "\n"
                 if (self.serialOptions != "") and (self.serialOptions is not None):
                     # Split out the parallel options
-                    options = self.serialOptions.split(",")
+                    options = self.serialOptions.split(";")
                     for option in options:
                         text = text + self.optionID + " " + option + "\n"
 
