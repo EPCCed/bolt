@@ -58,6 +58,9 @@ OPTIONS
 
 -i,--info                Display the program licence and warranty.
 
+-j,--job-name            The job name. Defaults to the name of the 
+                         specified executable.
+
 -l,--list                List the resources and batch systems available.
 
 -n,--tasks <n>           Number of parallel tasks. Defaults to 1. If
@@ -183,10 +186,10 @@ def main(argv):
         #=======================================================
 	# Read the command-line options
 	try:
-                opts, args = getopt.getopt(argv, "n:N:A:t:o:r:b:q:plshi", \
+                opts, args = getopt.getopt(argv, "n:N:A:t:o:r:b:q:j:plshi", \
 			       ["tasks=","tasks-per-node=","account=","job-time=", \
                                 "output-file=","resource=","batch=","queue=", \
-                                "force-parallel","list","submit","help","info"])
+                                "job-name=","force-parallel","list","submit","help","info"])
 	except getopt.GetoptError:
 	 	error.handleError("Could not parse command line options\n")
 
@@ -206,6 +209,8 @@ def main(argv):
 		if opt in ("-N", "--tasks-per-node"):
 			job.setTasksPerNode(arg)
                         taskPerNodeSpecified = True
+		if opt in ("-j", "--job-name"):
+			job.setName(arg)
 		if opt in ("-A", "--account"):
 			job.setAccountID(arg)
 		if opt in ("-t", "--job-time"):

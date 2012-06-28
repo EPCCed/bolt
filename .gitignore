@@ -1,2 +1,6 @@
 # Compiled source
 *.pyc
+
+# Results from tests
+*.bolt
+

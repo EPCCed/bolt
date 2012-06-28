@@ -1,0 +1,20 @@
+#!/bin/bash --login
+#
+# Parallel script produced by bolt
+#        Resource: HECToR (Cray XE6 (32-core per node))
+#    Batch system: PBSPro
+#
+# bolt is written by EPCC (http://www.epcc.ed.ac.uk)
+#
+#PBS -l mppwidth=32
+#PBS -N test4
+#PBS -A z01
+#PBS -l walltime=0:5:0
+
+# Switch to current working directory
+cd $PBS_O_WORKDIR
+
+# Run the parallel program
+aprun -n 1 -N 1 -d 1 test4
+
+

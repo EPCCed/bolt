@@ -30,6 +30,7 @@ class Code(object):
         """The default constructor - setup an simulation code system"""
         self.__name = None
         self.__desc = None
+        self.__message = None
 
         self.__parallel = None
         self.__serial = None

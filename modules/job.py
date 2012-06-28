@@ -224,13 +224,13 @@ class Job(object):
         if (self.pTasks % self.pTasksPerNode) > 0:
             nodesUsed += 1
         # Number of cores used per die
-        coresPerDieUsed = resource.diesPerSocket
+        coresPerDieUsed = min(self.pTasksPerNode, resource.coresPerDie)
         if (self.pTasksPerNode % resource.diesPerSocket) == 0:
             coresPerDieUsed = self.pTasksPerNode / (resource.socketsPerNode*resource.diesPerSocket)
         # Task stride - if we have enough spare cores use the preferred stride
         strideUsed = 1
         if (resource.coresPerDie / coresPerDieUsed) >= resource.preferredStride:
-            strideUsed = resource.preferredStride
+            strideUsed = min(coresPerDieUsed, resource.preferredStride)
             
 
         # Test to see if we have a parallel run command

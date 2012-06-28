@@ -71,13 +71,13 @@ default account code:
 [node info]
 
 # The number of physical processor sockets per node
-sockets per node:      1
+sockets per node:      16
 
 # The number of dies (or NUMA regoins) per socket
-dies per socket:       4
+dies per socket:       2
 
 # The number of cores per die
-cores per die:         8
+cores per die:         2
 
 # Does each job have exclusive access to a compute node (even
 # if it uses less than the total number of cores per node) or
