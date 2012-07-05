@@ -118,8 +118,23 @@ maximum tasks:              65536
 # The minimum number of parallel tasks needed for a single job
 minimum tasks:              1
 
-# The maximum job duration (in whole hours) allowed for parallel jobs
-maximum job duration:       12
+# The maximum job duration allowed for parallel jobs
+# This can either just be a single integer number of whole 
+# hours or, if the maximum walltime is dependent on the number
+# of nodes requested it can be a string specifying the maximum
+# walltime (in whole hours) for diffent ranges of *node* counts.
+# The upper range limit can be unspecified if it is required to
+# be the maximum number of nodes available on the system.
+# 
+# For example, if the max job duration is 12 hours but 
+# can be raised to 24 hours for node counts from 5-128 you 
+# would use:
+#
+#      1-4:12,5-128:24,129-:12
+#
+# i.e. 1-4 nodes have 12 hour maximum; 5-128 nodes have 24
+# hour maximum and 129 upwards have 12 hour maximum.
+maximum job duration:       1-4:12,5-128:24,129-:12
 
 # The format that the parallel job time will be printed in in
 # the job submission script. Valid values are:

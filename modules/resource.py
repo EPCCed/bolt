@@ -49,7 +49,7 @@ class Resource(object):
         self.__parallelJobs = False
         self.__minTasks = 0
         self.__maxTasks = 0
-        self.__maxJobTime = 0
+        self.__maxJobTime = None
         self.__parallelTimeFormat = None
         self.__preferredStride = 0
         self.__parallelBatchUnit = None
@@ -104,7 +104,7 @@ class Resource(object):
         """The default account ID to use if none is specified. 'group' 
         indicates that it should be taken from the current *nix group"""
         return self.__defaultAccount
-
+        
     # Node info
     @property
     def socketsPerNode(self):
@@ -142,8 +142,29 @@ class Resource(object):
         return self.__minTasks
     @property
     def maxJobTime(self):
-        """The maximum job time (in hours) permitted for parallel jobs"""
+        """The maximum job time permitted for parallel jobs"""
         return self.__maxJobTime
+    def maxJobTimeByNodes(self, nodes):
+        """The maximum job time (in hours) permitted for the specified number of nodes"""
+        # Test if we have just the number of hours or not
+        if not ":" in self.__maxJobTime: return int(self.__maxJobTime)
+        # Split up the string to extract regions
+        maxtime = 0
+        timebynodes = self.__maxJobTime.split(",")   
+        # Loop over specifications
+        for specify in timebynodes:
+                items = specify.split(":")
+                r = items[0]
+                mt = items[1]
+                range = r.split("-")
+                # If the upper range is empty use max cores
+                if range[1] == "": range[1] = str(self.__maxTasks)
+                # Set the max walltime string if we are in the range
+                if (nodes >= int(range[0])) and (nodes <= int(range[1])): maxtime = int(mt)
+        # Return the correct number of integer hours
+        return maxtime
+
+
     @property
     def parallelTimeFormat(self):
         """The format for the parallel time unit. Valid values are: 'hms', 'hours', 'seconds'"""
@@ -284,7 +305,7 @@ class Resource(object):
         self.__parallelJobs = resourceConfig.getboolean("parallel jobs", "parallel jobs")
         self.__maxTasks = resourceConfig.getint("parallel jobs", "maximum tasks")
         self.__minTasks = resourceConfig.getint("parallel jobs", "minimum tasks")
-        self.__maxJobTime = resourceConfig.getint("parallel jobs", "maximum job duration")
+        self.__maxJobTime = resourceConfig.get("parallel jobs", "maximum job duration")
         self.__parallelTimeFormat = resourceConfig.get("parallel jobs", "parallel time format")
         self.__preferredStride = resourceConfig.getint("parallel jobs", "preferred task stride")
         self.__parallelBatchUnit = resourceConfig.get("parallel jobs", "parallel reservation unit")

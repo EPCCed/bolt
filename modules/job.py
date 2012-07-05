@@ -405,9 +405,14 @@ class Job(object):
                                    time-consistency check
         """
 
-        # Check of we have requested too long
-        if self.wallTime > float(resource.maxJobTime):
-           error.handleError("Requested walltime ({0}) longer than maximum allowed on resource {1} ({2} hours).".format(self.wallTime, resource.name, resource.maxJobTime))
+        # Number of nodes needed for this job
+        nodesUsed = self.pTasks / self.pTasksPerNode
+        if (self.pTasks % self.pTasksPerNode) > 0:
+            nodesUsed += 1
+
+        # Check of we have requested a consistent job length
+        if self.wallTime > float(resource.maxJobTimeByNodes(nodesUsed)):
+           error.handleError("Requested walltime ({0} hours) longer than maximum allowed on resource {1} for this number of nodes ({2} hours).".format(self.wallTime, resource.name, resource.maxJobTimeByNodes(nodesUsed)))
 
     #======================================================================
     # Writing methods write out the job
