@@ -27,7 +27,7 @@ from textwrap import fill
 import sys
 def handleError(errMsg, errCode = 1):
         printError(errMsg)
-        exit(errCode)
+        sys.exit(errCode)
 
 def printError(errMsg):
         sys.stderr.write(fill("**ERROR** " + errMsg) + "\n\n")
