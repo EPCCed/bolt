@@ -186,9 +186,9 @@ def main(argv):
         #=======================================================
 	# Read the command-line options
 	try:
-                opts, args = getopt.getopt(argv, "n:N:A:t:o:r:b:q:j:plshi", \
-			       ["tasks=","tasks-per-node=","account=","job-time=", \
-                                "output-file=","resource=","batch=","queue=", \
+                opts, args = getopt.getopt(argv, "n:N:d:A:t:o:r:b:q:j:plshi", \
+			       ["tasks=","tasks-per-node=","threads=","account=", \
+                                "job-time=","output-file=","resource=","batch=","queue=", \
                                 "job-name=","force-parallel","list","submit","help","info"])
 	except getopt.GetoptError:
 	 	error.handleError("Could not parse command line options\n")
@@ -209,6 +209,10 @@ def main(argv):
 		if opt in ("-N", "--tasks-per-node"):
 			job.setTasksPerNode(arg)
                         taskPerNodeSpecified = True
+		if opt in ("-d", "--threads"):
+			job.setThreads(arg)
+			# If we have more than one thread this is a parallel job
+			if job.getThreads > 1: forceParallel = True
 		if opt in ("-j", "--job-name"):
 			job.setName(arg)
 		if opt in ("-A", "--account"):

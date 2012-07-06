@@ -40,7 +40,7 @@ class Job(object):
         self.__pTasks = 0
         self.__pTasksPerNode = 0
         self.__pTasksPerDie = 0
-        self.__threads = 0
+        self.__threads = 1
         self.__runLine = None
         self.__pBatchOptions = None
         self.__batchOptions = None
@@ -173,7 +173,7 @@ class Job(object):
            not.
          
            Arguments:
-             str tasksThe number of parallel tasks per node
+             str tasks   The number of parallel tasks per node
         """
         # Check we have an integer number of tasks
         if re.search("^[0-9]+$", str(tasks)) is not None:
@@ -191,6 +191,20 @@ class Job(object):
         """int Set the number of threads per task. Currently
                   unused as shared-memory jobs are not supported."""
         return self.__threads
+    def setThreads(self, threads):
+        """Set the number of shared-memory threads per parallel tasks.
+        Checks that an integer number of threads per task are requested
+        and exits with an error if not.
+
+        Arguments:
+           int threads  The number of threads per parallel task.
+        """
+        # Check we have an integer number of tasks
+        if re.search("^[0-9]+$", str(threads)) is not None:
+            self.__threads = int(threads)
+        else:
+            # Something elsethrow an error
+           error.handleError("Non-numeric number of threads per task specified ({0}).\n".format(threads))
     @property
     def runLine(self):
         """str The command used to launch the application. For example,
@@ -217,6 +231,8 @@ class Job(object):
                                   distribution
         """
 
+        # Make sure the job run line is empty
+        runLine = ""
 
         # First compute all the values we might need
         # Number of nodes needed
@@ -228,7 +244,15 @@ class Job(object):
         if (self.pTasksPerNode % resource.diesPerSocket) == 0:
             coresPerDieUsed = self.pTasksPerNode / (resource.socketsPerNode*resource.diesPerSocket)
         # Task stride - if we have enough spare cores use the preferred stride
+        # Also depends if we have specified threads or not - if we have specified 
+        # the number of threads then this should be the stride
         strideUsed = 1
+        if (self.threads > 1):
+            strideUsed = self.threads
+            if "csh" in resource.shell:
+                runLine = "setenv OMP_NUM_THREADS " + str(self.threads) + "\n"
+            else:
+                runLine = "export OMP_NUM_THREADS=" + str(self.threads) + "\n"
         if (resource.coresPerDie / coresPerDieUsed) >= resource.preferredStride:
             strideUsed = min(coresPerDieUsed, resource.preferredStride)
             
@@ -242,7 +266,6 @@ class Job(object):
             if not resource.useBatchParallelOpts:
                 error.handleError("No parallel run command or batch options to use.\n", 1)
 
-        runLine = ""
         pBatchOptions = ""
 
         #-------------------------------------------------------------------------------------------
@@ -345,7 +368,7 @@ class Job(object):
         """Set the name of the executable to use.
 
            Arguments:
-             str commandThe executable to use
+             str command  The executable to use
         """
         self.__jobCommand = command
     @property
@@ -356,12 +379,12 @@ class Job(object):
         """Set the account ID for the job.
 
            Arguments:
-             str accountThe account ID
+             str account  The account ID
         """
         self.__accountID = account
 
     #======================================================================
-    # Verification methodscheck the consistency of the job
+    # Verification methods check the consistency of the job
     def checkTasks(self, resource):
         """Check that the tasks requested are consistent with the selected
            resource. If errors are found then an error is printed and the
@@ -383,6 +406,14 @@ class Job(object):
             tpn = resource.numCoresPerNode()
             error.printWarning("Number of specified parallel tasks per node ({0}) is greater than number available for resource {1} ({2}). Reducing tasks per node to {3}.".format(self.pTasksPerNode, resource.name, resource.numCoresPerNode(), tpn))
             self.setTasksPerNode(resource.numCoresPerNode())
+
+        # Check that the number of shared-memory threads requested 
+        # is consistent
+        # Do we have enough cores on a nodes
+        coresPerNodeRequired = self.pTasksPerNode * self.threads
+        if coresPerNodeRequired > resource.numCoresPerNode():
+            error.handleError("Number of cores per node required ({0}) is greater than number available for resource {1} ({2}). Reduce number of threads per task or tasks per node".format(coresPerNodeRequired, resource.name, resource.numCoresPerNode()))
+     
 
         # Check the total number of tasks
         # Number of nodes needed for this job
