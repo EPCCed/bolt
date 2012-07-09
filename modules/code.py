@@ -42,7 +42,7 @@ class Code(object):
         self.__preamble = None
         self.__postamble = None
 
-    # Properties
+    # Properties ==============================================================
     # Code info
     @property
     def name(self):
@@ -51,11 +51,48 @@ class Code(object):
     @property
     def desc(self):
         """A description of the code"""
-        return self.__submitCommand
+        return self.__desc
+    @property
+    def message(self):
+        """Any text to display when a user sets up a job for this code"""
+        return self.__message
+    # Job types allowed
+    @property
+    def parallel(self):
+        """Can the code be run as a distributed memory parallel job?"""
+        return self.__parallel
+    @property
+    def serial(self):
+        """Can the code be run as a serial job?"""
+        return self.__serial
+    @property
+    def hybrid(self):
+        """Can the code be run as a hybrid distributed-/shared-memory job?"""
+        return self.__hybrid
+    # Task numbers
+    @property
+    def maxTasks(self):
+        """The maximum number of tasks that can be selected for jobs using
+           this code."""
+        return self.__maxTasks
+    @property
+    def minTasks(self):
+        """The minimum number of tasks that can be selected for jobs using
+           this code."""
+        return self.__minTasks
+    # Script commands
+    @property
+    def preamble(self):
+        """Any commands to be run in the script before the job runs."""
+        return self.__preamble
+    @property
+    def postamble(self):
+        """Any commands to be run in the script after the job runs."""
+        return self.__postamble
 
-    # Methods
+    # Methods ==============================================================
     def readConfig(self, fileName):
-        """Read the code properties from a config file that uses the 
+        """Read the code properties from a configuration file that uses the 
         ConfigParser module.
 
         Arguments:
@@ -69,6 +106,18 @@ class Code(object):
 
         # Get the batch information options
         self.__name = codeConfig.get("system info", "name")
+        self.__desc = codeConfig.get("system info", "description")
+        self.__message = codeConfig.get("system info", "runtime message")
+
+        self.__parallel = codeConfig.getboolean("job types", "parallel")
+        self.__serial = codeConfig.getboolean("job types", "serial")
+        self.__hybrid = codeConfig.getboolean("job types", "hybrid")
+
+        self.__maxTasks = codeConfig.getint("job limits", "maximum tasks")
+        self.__minTasks = codeConfig.getint("job limits", "minimum tasks")
+
+        self.__preamble = codeConfig.get("script commands", "preamble")
+        self.__postamble = codeConfig.get("script commands", "postamble")
 
     def summaryString(self):
             """Return a string summarising the code.
