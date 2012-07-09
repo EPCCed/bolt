@@ -110,8 +110,38 @@ fi
 #   Uses: Huygens2.resource; LL_PPC64.batch
 test="test6"
 echo "========================================================"
-echo "$test: 6 no job launcher, request by nodes..."
+echo "$test: no job launcher, request by nodes..."
 $BOLT_DIR/bin/bolt -r Huygens -b LL_PPC64 -j $test -n 256 -o $test.bolt $test &> /dev/null
+diff $test.bolt $test.verify &> /dev/null
+if [ $? -eq 0 ]; then
+        rm $test.bolt
+        echo "   ...$test passed."
+else
+        nfail=`expr $nfail + 1`
+        echo "   ...$test failed. Diff:"
+        diff $test.bolt $test.verify
+fi
+# Test 7: Hybrid job with 2 threads
+#   Uses: HECToR.resource; PBSPro.batch
+test="test7"
+echo "========================================================"
+echo "$test: hybrid job with 2 threads per task..."
+$BOLT_DIR/bin/bolt -r HECToR -b PBSPro -A z01 -j $test -n 1024 -d 2 -o $test.bolt $test &> /dev/null
+diff $test.bolt $test.verify &> /dev/null
+if [ $? -eq 0 ]; then
+        rm $test.bolt
+        echo "   ...$test passed."
+else
+        nfail=`expr $nfail + 1`
+        echo "   ...$test failed. Diff:"
+        diff $test.bolt $test.verify
+fi
+# Test 8: Hybrid job with weird number of threads
+#   Uses: HECToR.resource; PBSPro.batch
+test="test8"
+echo "========================================================"
+echo "$test: hybrid job with 3 threads per task..."
+$BOLT_DIR/bin/bolt -r HECToR -b PBSPro -A z01 -j $test -n 1024 -d 3 -o $test.bolt $test &> /dev/null
 diff $test.bolt $test.verify &> /dev/null
 if [ $? -eq 0 ]; then
         rm $test.bolt

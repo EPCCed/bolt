@@ -402,6 +402,10 @@ class Job(object):
                                    consistency check
         """
 
+        # Check parallel jobs are supported on this resource
+        if not resource.parallelJobs:
+            error.handleError("Resource {0} does not support parallel jobs.".format(resource.name))
+
         # Check we do not have more tasks per node than tasks
         if self.pTasksPerNode > self.pTasks:
             tpn = min(self.pTasks, resource.numCoresPerNode())
@@ -414,9 +418,13 @@ class Job(object):
             error.printWarning("Number of specified parallel tasks per node ({0}) is greater than number available for resource {1} ({2}). Reducing tasks per node to {3}.".format(self.pTasksPerNode, resource.name, resource.numCoresPerNode(), tpn))
             self.setTasksPerNode(resource.numCoresPerNode())
 
+        # Check that we support hybrid jobs if it has been requested
+        if (self.threads > 1) and (self.pTasks > 1) and (not resource.hybridJobs):
+            error.handleError("Resource {0} does not support hybrid distributed-/shared-memory jobs please only use 1 threads per task.".format(resource.name))
+
         # Check that the number of shared-memory threads requested 
         # is consistent
-        # Do we have enough cores on a nodes
+        # Do we have enough cores on a node
         coresPerNodeRequired = self.pTasksPerNode * self.threads
         if coresPerNodeRequired > resource.numCoresPerNode():
             error.handleError("Number of cores per node required ({0}) is greater than number available for resource {1} ({2}). Reduce number of threads per task or tasks per node".format(coresPerNodeRequired, resource.name, resource.numCoresPerNode()))
@@ -429,9 +437,9 @@ class Job(object):
             nodesUsed += 1
         pUnits = nodesUsed * resource.numCoresPerNode()
         if pUnits > resource.maxTasks:
-            error.handleError("Specified parallel tasks required ({0}) is greater than number available for resource {1} ({2}).".format(pUnits, resource.name, resource.maxTasks))
+            error.handleError("Resources required ({0} cores) is greater than number available for resource {1} ({2}).".format(pUnits, resource.name, resource.maxTasks))
         if pUnits < resource.minTasks:
-            error.handleError("Specified parallel tasks required ({0}) is less than minimum required for resource {1} ({2}).".format(pUnits, resource.name, resource.minTasks))
+            error.handleError("Resources required ({0} cores) is less than minimum required for resource {1} ({2}).".format(pUnits, resource.name, resource.minTasks))
 
     def checkTime(self, resource):
         """Check that the time requested is consistent with the selected

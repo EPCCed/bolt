@@ -38,6 +38,7 @@ accelerator type:
 
 [parallel jobs]
 parallel jobs:              True
+hybrid jobs:                True
 maximum tasks:              80640
 minimum tasks:              1
 maximum job duration:       12

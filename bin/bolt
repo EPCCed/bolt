@@ -53,6 +53,9 @@ OPTIONS
                          script for. Default is specified by the resource
                          configuration. Use the '-l' option to list valid
                          values.
+
+-d,--threads <n>         The number of shared-memory threads per parallel
+                         task. Default is 1.
                          
 -h,--help                Show this help.
 
@@ -91,7 +94,7 @@ OPTIONS
 -t,--job-time <hh:mm:ss> Specify the wallclock limit for the job.
 """
 __author__  =  'Andrew Turner, EPCC, The University of Edinburgh'
-__version__ =  '0.4'
+__version__ =  '0.5'
 
 from resource import Resource
 from batch import Batch

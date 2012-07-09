@@ -38,6 +38,7 @@ accelerator type:      NVidia
 
 [parallel jobs]
 parallel jobs:              True
+hybrid jobs:                True
 maximum tasks:              12    ; cores
 minimum tasks:              1    ; cores
 maximum job duration:       12    ; hours

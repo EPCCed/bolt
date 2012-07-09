@@ -99,6 +99,9 @@ accelerator type:
 # Specify whether or not parallel jobs are available
 parallel jobs:              yes
 
+# Specify whether or not parallel jobs are available
+hybrid jobs:                yes
+
 # The maximum number of parallel tasks allowed for a single job
 maximum tasks:              5120
 

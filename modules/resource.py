@@ -47,6 +47,7 @@ class Resource(object):
         self.__accelerator = False
 
         self.__parallelJobs = False
+        self.__hybridJobs = False
         self.__minTasks = 0
         self.__maxTasks = 0
         self.__maxJobTime = None
@@ -132,6 +133,10 @@ class Resource(object):
     def parallelJobs(self):
         """Are parallel jobs allowed on the resource?"""
         return self.__parallelJobs
+    @property
+    def hybridJobs(self):
+        """Are hybrid ditributed-/shared-memory jobs allowed on the resource?"""
+        return self.__hybridJobs
     @property
     def maxTasks(self):
         """The maximum number of parallel tasks in a job"""
@@ -303,6 +308,7 @@ class Resource(object):
 
         # Get the parallel jobs options
         self.__parallelJobs = resourceConfig.getboolean("parallel jobs", "parallel jobs")
+        self.__hybridJobs = resourceConfig.getboolean("parallel jobs", "hybrid jobs")
         self.__maxTasks = resourceConfig.getint("parallel jobs", "maximum tasks")
         self.__minTasks = resourceConfig.getint("parallel jobs", "minimum tasks")
         self.__maxJobTime = resourceConfig.get("parallel jobs", "maximum job duration")
@@ -359,5 +365,17 @@ class Resource(object):
                                                                    self.nodes, \
                                                                    self.numCores())
         return output
+
+    def __str__(self):
+        """Print a string representing this resource.
+
+           Returns:
+              str  output  - a string that describes this compute resource.
+        """
+        output = "\n" + self.name + ":\n\n"
+        output = output + self.arch + "\n"
+
+        return output
+
 
 

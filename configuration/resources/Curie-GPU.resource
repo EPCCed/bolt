@@ -38,6 +38,7 @@ accelerator type:      NVidia M2090
 
 [parallel jobs]
 parallel jobs:              True
+hybrid jobs:                True
 maximum tasks:              288
 minimum tasks:              1
 maximum job duration:       12
