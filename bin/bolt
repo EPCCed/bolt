@@ -212,7 +212,7 @@ def main(argv):
 		if opt in ("-d", "--threads"):
 			job.setThreads(arg)
 			# If we have more than one thread this is a parallel job
-			if job.getThreads > 1: forceParallel = True
+			if job.threads > 1: forceParallel = True
 		if opt in ("-j", "--job-name"):
 			job.setName(arg)
 		if opt in ("-A", "--account"):
@@ -295,8 +295,13 @@ def main(argv):
 
         # Default cores per node comes from the resource
 	if job.pTasksPerNode == 0:
-		error.printWarning("Setting number of tasks per node to " + str(resource.numCoresPerNode()))
-		job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
+		defaultCPN = resource.numCoresPerNode()
+		# We need to account for the number of threads if > 1
+		if job.threads > 1: defaultCPN = defaultCPN / job.threads
+		# Catch the case where there are less than a nodes-worth of tasks
+		defaultCPN = min(job.pTasks * job.threads, defaultCPN)
+		job.setTasksPerNode(defaultCPN)
+		error.printWarning("Setting number of tasks per node to " + str(defaultCPN))
         if (job.accountID == "") or (job.accountID is None) and (resource.accountRequired):
                 if resource.defaultAccount == "group":
                         # Get account from *nix group

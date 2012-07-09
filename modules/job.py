@@ -241,8 +241,11 @@ class Job(object):
             nodesUsed += 1
         # Number of cores used per die
         coresPerDieUsed = min(self.pTasksPerNode, resource.coresPerDie)
-        if (self.pTasksPerNode % resource.diesPerSocket) == 0:
+        if (self.pTasksPerNode % (resource.diesPerSocket*resource.socketsPerNode)) == 0:
             coresPerDieUsed = self.pTasksPerNode / (resource.socketsPerNode*resource.diesPerSocket)
+        else:
+            # If we cannot divide this up then we just need to ignore this option
+            coresPerDieUsed = 0
         # Task stride - if we have enough spare cores use the preferred stride
         # Also depends if we have specified threads or not - if we have specified 
         # the number of threads then this should be the stride
@@ -253,7 +256,11 @@ class Job(object):
                 runLine = "setenv OMP_NUM_THREADS " + str(self.threads) + "\n"
             else:
                 runLine = "export OMP_NUM_THREADS=" + str(self.threads) + "\n"
-        if (resource.coresPerDie / coresPerDieUsed) >= resource.preferredStride:
+        elif coresPerDieUsed == 0:
+            # This is if we need to ignore the tasks per die option
+            if (resource.numCoresPerNode() / self.pTasksPerNode) > resource.preferredStride:
+                strideUsed = min(self.pTasksPerNode, resource.preferredStride)
+        elif (resource.coresPerDie / coresPerDieUsed) >= resource.preferredStride:
             strideUsed = min(coresPerDieUsed, resource.preferredStride)
             
 
@@ -278,7 +285,7 @@ class Job(object):
                 error.handleError("The job launcher parallel task option is not set.\n", 1)
             elif self.pTasks == 0:
                 error.handleError("The number of parallel tasks has not been set.\n", 1)
-            runline = "{0} {1} {2}".format(resource.parallelJobLauncher, option, self.pTasks)
+            runline = "{0}{1} {2} {3}".format(runLine, resource.parallelJobLauncher, option, self.pTasks)
 
             # Can we control the nodes used?
             option = resource.nodesOption
@@ -292,7 +299,7 @@ class Job(object):
 
             # Can we control the number of tasks per die?
             option = resource.taskPerDieOption
-            if ((option != "") and (option is not None)) and (self.pTasksPerNode > 1):
+            if ((option != "") and (option is not None)) and (self.pTasksPerNode > 1) and (coresPerDieUsed > 0):
                 runline = "{0} {1} {2}".format(runline, option, coresPerDieUsed)
                 
             # Can we control the stride
@@ -339,7 +346,7 @@ class Job(object):
 
             # Can we control the number of tasks per die?
             option = batch.taskPerDieOption
-            if not ((option == "") or (option is None)) and (self.pTasksPerNode > 1):
+            if not ((option == "") or (option is None)) and (self.pTasksPerNode > 1) and (coresPerDieUsed > 0):
                 pBatchOptions = "{0}{1} {2}{3}".format(pBatchOptions, batch.optionID, option, coresPerDieUsed)
                 
             # Can we control the stride
