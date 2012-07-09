@@ -4,3 +4,5 @@
 # Results from tests
 *.bolt
 
+# Compiled main program
+boltc
