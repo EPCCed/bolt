@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 #===============================================================
-# Simple Job Submission Tool
+# bolt - Simple Job Submission Tool
 #
 # Submit jobs to different compute resource batch systems using
 # a common interface. Tries to optimally distribute parallel
@@ -9,6 +9,8 @@
 #===============================================================
 #
 #===============================================================
+# v0.5 - Added support for hybrid jobs and ability to define
+#        simulation codes
 # v0.4 - Added option to distribute tasks using batch system
 # v0.3 - Added GPL
 #===============================================================
@@ -49,6 +51,11 @@ OPTIONS
                          script for. Default is specified by the resource
                          configuration. Use the '-l' option to list valid
                          values.
+
+-c,--code <code>         Specify a simulation code to generate a batch
+                         script for. Use the '-l' option to list valid 
+                         values and details on the arguments that should
+                         be provided.
 
 -d,--threads <n>         The number of shared-memory threads per parallel
                          task. Default is 1.
@@ -252,9 +259,11 @@ def main(argv):
 				error.handleError("Resource not found: {0}. Known resources are {1}\n".format(selectedResource, resourceDict.keys()))
 		if opt in ("-c", "--code"):
 			selectedCode = arg
+			if nCode == 0:
+				error.handleError("Code not found: {0}. No codes currently defined. Use 'bolt -h' to display usage information.\n".format(selectedCode))
 			# Test if we know the specified code
 			if selectedCode not in codeDict:
-				error.handleError("Code not found: {0}. Known resources are {1}\n".format(selectedCode, codeDict.keys()))
+				error.handleError("Code not found: {0}. Known codes are {1}\n".format(selectedCode, codeDict.keys()))
 		if opt in ("-s", "--submit"):
 			submitJob = True
 		if opt in ("-b", "--batch"):
@@ -275,8 +284,12 @@ def main(argv):
 			exit(0)
 
         # Check that we have an executable name to use
-        if (len(args) < 1) and (selectedCode is None):
-		error.handleError("You must specify an executable name to use. Use 'bolt -h' to show correct usage.")
+        if selectedCode is None:
+		if len(args) < 1:
+			error.handleError("You must specify an executable name to use. Use 'bolt -h' to show correct usage.")
+	else:
+		if len(args) != codes[codeDict[selectedCode]].nargs:
+			error.handleError("You have not specified the correct number of command line arguments for code {0} ({1}).".format(selectedCode,codes[codeDict[selectedCode]].nargs))
 
         # Is this a parallel job or not
 	job.setIsParallel((job.pTasks > 1) or (forceParallel))
@@ -392,37 +405,40 @@ def main(argv):
 			# No code specified, job command is the remaining arguments
 			job.setJobCommand(' '.join(args))
 		else:
+			# Print the message
+			if code.message is not None: sys.stdout.write("Note:\n" + code.message + "\n\n")
 			# Get the executable from the code description
 			# Are we running parallel or hybrid job
-			if (job.threads > 1) and (code.hybrid is None):
-				error.handleError("Shared-memory threads specified but not supported by code {0}.".format(code.name))
-			else:
-				exe = code.hybrid + " "
-				job.setJobCommand(exe + ' '.join(args))
-		        if (job.threads == 1) and (code.parallel is None):
-				error.handleError("Parallel job specified but not supported by code {0}.".format(code.name))
-			else:
-				exe = code.parallel + " "
-				job.setJobCommand(exe + ' '.join(args))
+			if job.threads > 1:
+				if code.hybrid is None:
+					error.handleError("Shared-memory threads specified but not supported by code {0}.".format(code.name))
+				else:
+					job.setJobCommand(code.hybrid + " " + code.argFormat.format(*args))
+		        elif job.threads == 1:
+                                if code.parallel is None:
+					error.handleError("Parallel job specified but not supported by code {0}.".format(code.name))
+				else:
+					job.setJobCommand(code.parallel + " " + code.argFormat.format(*args))
 
 		# For parallel jobs we need to compute the pseudo-optimal distribution of
 		# tasks and set the parallel job launcher command
 		job.setParallelDistribution(resource, batch)
 		# Write the parallel job script
-		job.writeParallelJob(batch, resource, outputFile)
+		job.writeParallelJob(batch, resource, code, outputFile)
 	else:
 		if code is None:
 			# Job command is the remaining arguments
                 	job.setJobCommand(' '.join(args))
                 else:
+			# Print the message
+			if code.message is not None: sys.stdout.write("Note:\n" + code.message + "\n\n")
 			if code.serial is None:
 				error.handleError("Serial job specified but not supported by code {0}.".format(code.name))
 			else:
-				exe = code.serial + " "
-				job.setJobCommand(exe + ' '.join(args))
-			# Get the executable from the code description
-		# Write the parallel job script
-		job.writeSerialJob(batch, resource, outputFile)
+				job.setJobCommand(code.serial + " " + code.argFormat.format(*args))
+
+		# Write the serial job script
+		job.writeSerialJob(batch, resource, code, outputFile)
 
         # Close the file if we need to
 	if outputFileName is not None: outputFile.close()
@@ -493,10 +509,10 @@ def listCodes(codes):
 	if len(codes) < 1:
 		sys.stdout.write("\nNo simulation codes defined.\n")
 	else:	
-		sys.stdout.write("\nDefined simulation codes:\n")
+		sys.stdout.write("\nDefined simulation codes:\n\n")
 		for code in codes:
 			summary = code.summaryString()
-			sys.stdout.write("  " + summary + "  \n")
+			sys.stdout.write(summary + "\n")
 		sys.stdout.write("\n")
 
 def printHelp(rootDir):

@@ -31,11 +31,12 @@ class Code(object):
         self.__name = None
         self.__desc = None
         self.__message = None
-        self.__allowSubmit = False
 
         self.__parallel = None
         self.__serial = None
         self.__hybrid = None
+        self.__nargs = 0
+        self.__argFormat = None
 
         self.__maxTasks = 1
         self.__minTasks = 1
@@ -61,7 +62,7 @@ class Code(object):
     def allowSubmit(self):
         """Can bolt submit this type of job directly?"""
         return self.__allowSubmit
-    # Job types allowed
+    # Job settings allowed
     @property
     def parallel(self):
         """Can the code be run as a distributed memory parallel job?"""
@@ -74,6 +75,14 @@ class Code(object):
     def hybrid(self):
         """Can the code be run as a hybrid distributed-/shared-memory job?"""
         return self.__hybrid
+    @property
+    def nargs(self):
+        """The number of arguments that should be supplied for this code"""
+        return self.__nargs
+    @property
+    def argFormat(self):
+        """The format string for the code's arguments"""
+        return self.__argFormat
     # Task numbers
     @property
     def maxTasks(self):
@@ -113,11 +122,12 @@ class Code(object):
         self.__name = codeConfig.get("code info", "name")
         self.__desc = codeConfig.get("code info", "description")
         self.__message = codeConfig.get("code info", "runtime message")
-        self.__allowSubmit = codeConfig.getboolean("code info", "allow direct submission")
 
-        self.__parallel = codeConfig.get("job types", "parallel")
-        self.__serial = codeConfig.get("job types", "serial")
-        self.__hybrid = codeConfig.get("job types", "hybrid")
+        self.__parallel = codeConfig.get("job settings", "parallel")
+        self.__serial = codeConfig.get("job settings", "serial")
+        self.__hybrid = codeConfig.get("job settings", "hybrid")
+        self.__nargs = codeConfig.getint("job settings", "number of arguments")
+        self.__argFormat = codeConfig.get("job settings", "argument format")
 
         self.__maxTasks = codeConfig.getint("job limits", "maximum tasks")
         self.__minTasks = codeConfig.getint("job limits", "minimum tasks")
@@ -131,4 +141,4 @@ class Code(object):
                Return:
                   str  output  - The string summarising the code
             """
-            return "| {0:<10} |".format(self.name)
+            return "*{0}*\n\n{1}\n\n{2}".format(self.name,self.desc,self.message)
