@@ -95,6 +95,7 @@ __version__ =  '0.5'
 from resource import Resource
 from batch import Batch
 from job import Job
+from code import Code
 import error
 import sys
 import os
@@ -177,7 +178,25 @@ def main(argv):
 		error.handleError("Default resource not found: {0}. Known resources are {1}\n".format(defaultResource, resourceDict.keys()))
 		exit(1)
                 
+        #=======================================================
+        # Read any code definitions
+        #=======================================================
+        codeConfigDir = rootDir + '/configuration/codes'
+        codes = []
+        nCode = 0
+	# We also need to create a dictionary of resources here
+	codeDict = {}
+        for file in os.listdir(codeConfigDir):
+                if fnmatch.fnmatch(file, '*.code'):
+                        nCode += 1
+			code = Code()
+                        code.readConfig(codeConfigDir + '/' + file)
+                        codes.append(code)
+			codeDict[code.name] = nCode-1
+
+        #=======================================================
         # Create the job object
+        #=======================================================
         job = Job()
 
         #=======================================================
@@ -185,10 +204,11 @@ def main(argv):
         #=======================================================
 	# Read the command-line options
 	try:
-                opts, args = getopt.getopt(argv, "n:N:d:A:t:o:r:b:q:j:plshi", \
+                opts, args = getopt.getopt(argv, "n:N:d:A:t:o:r:b:q:j:c:plshi", \
 			       ["tasks=","tasks-per-node=","threads=","account=", \
                                 "job-time=","output-file=","resource=","batch=","queue=", \
-                                "job-name=","force-parallel","list","submit","help","info"])
+                                "job-name=","code=","force-parallel","list","submit", \
+                                "help","info"])
 	except getopt.GetoptError:
 	 	error.handleError("Could not parse command line options\n")
 
@@ -200,6 +220,7 @@ def main(argv):
 	outputFile = None
 	selectedResource = None
 	selectedBatch = None
+	selectedCode = None
 
 	# Parse the command-line options
 	for opt, arg in opts:
@@ -229,6 +250,11 @@ def main(argv):
 			# Test if we know the specified resource
 			if selectedResource not in resourceDict:
 				error.handleError("Resource not found: {0}. Known resources are {1}\n".format(selectedResource, resourceDict.keys()))
+		if opt in ("-c", "--code"):
+			selectedCode = arg
+			# Test if we know the specified code
+			if selectedCode not in codeDict:
+				error.handleError("Code not found: {0}. Known resources are {1}\n".format(selectedCode, codeDict.keys()))
 		if opt in ("-s", "--submit"):
 			submitJob = True
 		if opt in ("-b", "--batch"):
@@ -239,6 +265,7 @@ def main(argv):
                 if opt in ("-l", "--list"):
 			listResources(resources, defaultResource)
 			listBatch(batches, resources[resourceDict[defaultResource]].batch)
+			listCodes(codes)
 			exit(0)
                 if opt in ("-h", "--help"):
 			printHelp(rootDir)
@@ -248,7 +275,7 @@ def main(argv):
 			exit(0)
 
         # Check that we have an executable name to use
-        if len(args) < 1:
+        if (len(args) < 1) and (selectedCode is None):
 		error.handleError("You must specify an executable name to use. Use 'bolt -h' to show correct usage.")
 
         # Is this a parallel job or not
@@ -273,14 +300,20 @@ def main(argv):
 	if selectedResource is None: selectedResource = resources[resourceDict[defaultResource]].name
 	if selectedBatch is None: selectedBatch = resources[resourceDict[selectedResource]].batch
 
-        # For convenience, set the selected resource and batch system
+        # For convenience, set the selected resource, batch system and code
         resource = resources[resourceDict[selectedResource]]
         batch = batches[batchDict[selectedBatch]]
+	code = None
+	if selectedCode is not None: code = codes[codeDict[selectedCode]]
 
         # Default job name is the name of the executable
         if job.name is None:
-        	error.printWarning("Setting job name to: " + args[0])
-        	job.setName(args[0])
+		if selectedCode is None:
+			error.printWarning("Setting job name to: " + args[0])
+        		job.setName(args[0])
+		else:
+			error.printWarning("Setting job name to: " + selectedCode + "_job")
+        		job.setName(selectedCode + "_job")
 
         # Default wall time is 5 minutes
         if job.wallTime is None: 
@@ -338,7 +371,7 @@ def main(argv):
 
         # Check that we have specified a sensible number of tasks for a parallel job
 	if job.isParallel:
-		job.checkTasks(resource)
+		job.checkTasks(resource, code)
 
         # Check that we have specified a sensible job time
         job.checkTime(resource)
@@ -353,16 +386,41 @@ def main(argv):
         #=======================================================
 	# Is this a serial or parallel job
 	if job.isParallel:
-                # Job command is the remaining arguments
-                job.setJobCommand(' '.join(args))
+		# Set the job command 
+		if code is None:
+			print "No code"
+			# No code specified, job command is the remaining arguments
+			job.setJobCommand(' '.join(args))
+		else:
+			# Get the executable from the code description
+			# Are we running parallel or hybrid job
+			if (job.threads > 1) and (code.hybrid is None):
+				error.handleError("Shared-memory threads specified but not supported by code {0}.".format(code.name))
+			else:
+				exe = code.hybrid + " "
+				job.setJobCommand(exe + ' '.join(args))
+		        if (job.threads == 1) and (code.parallel is None):
+				error.handleError("Parallel job specified but not supported by code {0}.".format(code.name))
+			else:
+				exe = code.parallel + " "
+				job.setJobCommand(exe + ' '.join(args))
+
 		# For parallel jobs we need to compute the pseudo-optimal distribution of
 		# tasks and set the parallel job launcher command
 		job.setParallelDistribution(resource, batch)
 		# Write the parallel job script
 		job.writeParallelJob(batch, resource, outputFile)
 	else:
-		# Job command is the remaining arguments
-                job.setJobCommand(' '.join(args))
+		if code is None:
+			# Job command is the remaining arguments
+                	job.setJobCommand(' '.join(args))
+                else:
+			if code.serial is None:
+				error.handleError("Serial job specified but not supported by code {0}.".format(code.name))
+			else:
+				exe = code.serial + " "
+				job.setJobCommand(exe + ' '.join(args))
+			# Get the executable from the code description
 		# Write the parallel job script
 		job.writeSerialJob(batch, resource, outputFile)
 
@@ -373,8 +431,8 @@ def main(argv):
 	# Submit the job if required
         #=======================================================
         if submitJob:
-        	sys.stderr.write("Submitting job...\n")
-        	subprocess.call([batch.submitCommand, outputFileName])
+		sys.stderr.write("Submitting job...\n")
+		subprocess.call([batch.submitCommand, outputFileName])
 
 	# Finish nicely
 	exit(0)
@@ -425,6 +483,21 @@ def listBatch(batches, defaultBatch):
 		else:
 			sys.stdout.write("  " + summary + "  \n")
 	sys.stdout.write("\n")
+
+def listCodes(codes):
+	"""List the defined simulation codes.
+
+           Arguments:
+              array codes      - Array of defined codes
+        """
+	if len(codes) < 1:
+		sys.stdout.write("\nNo simulation codes defined.\n")
+	else:	
+		sys.stdout.write("\nDefined simulation codes:\n")
+		for code in codes:
+			summary = code.summaryString()
+			sys.stdout.write("  " + summary + "  \n")
+		sys.stdout.write("\n")
 
 def printHelp(rootDir):
 	"""Print help for the tool.

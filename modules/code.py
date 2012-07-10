@@ -31,6 +31,7 @@ class Code(object):
         self.__name = None
         self.__desc = None
         self.__message = None
+        self.__allowSubmit = False
 
         self.__parallel = None
         self.__serial = None
@@ -56,6 +57,10 @@ class Code(object):
     def message(self):
         """Any text to display when a user sets up a job for this code"""
         return self.__message
+    @property
+    def allowSubmit(self):
+        """Can bolt submit this type of job directly?"""
+        return self.__allowSubmit
     # Job types allowed
     @property
     def parallel(self):
@@ -105,13 +110,14 @@ class Code(object):
         codeConfig.read(fileName)
 
         # Get the batch information options
-        self.__name = codeConfig.get("system info", "name")
-        self.__desc = codeConfig.get("system info", "description")
-        self.__message = codeConfig.get("system info", "runtime message")
+        self.__name = codeConfig.get("code info", "name")
+        self.__desc = codeConfig.get("code info", "description")
+        self.__message = codeConfig.get("code info", "runtime message")
+        self.__allowSubmit = codeConfig.getboolean("code info", "allow direct submission")
 
-        self.__parallel = codeConfig.getboolean("job types", "parallel")
-        self.__serial = codeConfig.getboolean("job types", "serial")
-        self.__hybrid = codeConfig.getboolean("job types", "hybrid")
+        self.__parallel = codeConfig.get("job types", "parallel")
+        self.__serial = codeConfig.get("job types", "serial")
+        self.__hybrid = codeConfig.get("job types", "hybrid")
 
         self.__maxTasks = codeConfig.getint("job limits", "maximum tasks")
         self.__minTasks = codeConfig.getint("job limits", "minimum tasks")

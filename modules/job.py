@@ -227,7 +227,7 @@ class Job(object):
            Arguments:
               Resource resource   The resource to use for the task
                                   distribution
-              Resource batch      The batch system to use for the task
+              Batch    batch      The batch system to use for the task
                                   distribution
         """
 
@@ -392,14 +392,16 @@ class Job(object):
 
     #======================================================================
     # Verification methods check the consistency of the job
-    def checkTasks(self, resource):
+    def checkTasks(self, resource, code):
         """Check that the tasks requested are consistent with the selected
            resource. If errors are found then an error is printed and the
            program exits.
 
            Arguments:
              Resource  resource The selected resource to use for the
-                                   consistency check
+                                consistency check
+             Code      code     The code specified (None if no code
+                                specified)
         """
 
         # Check parallel jobs are supported on this resource
@@ -440,6 +442,15 @@ class Job(object):
             error.handleError("Resources required ({0} cores) is greater than number available for resource {1} ({2}).".format(pUnits, resource.name, resource.maxTasks))
         if pUnits < resource.minTasks:
             error.handleError("Resources required ({0} cores) is less than minimum required for resource {1} ({2}).".format(pUnits, resource.name, resource.minTasks))
+
+        # Check against tasks for code
+        if code is not None:
+            # Test the maximum tasks
+            if (code.maxTasks > 0) and (pUnits > code.maxTasks):
+                error.handleError("Resources required ({0} cores) is greater than number allowed for code {1} ({2}).".format(pUnits, code.name, code.maxTasks))
+            # Test the mimimum tasks
+            if (code.minTasks > 0) and (pUnits < code.minTasks):
+                error.handleError("Resources required ({0} cores) is less than minimum required for code {1} ({2}).".format(pUnits, code.name, code.minTasks))
 
     def checkTime(self, resource):
         """Check that the time requested is consistent with the selected

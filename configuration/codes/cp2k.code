@@ -1,0 +1,99 @@
+#----------------------------------------------------------------------
+# Copyright 2012 EPCC, The University of Edinburgh
+#
+# This file is part of bolt.
+#
+# bolt is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# bolt is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with bolt.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+#
+# CP2K Code
+# =========
+#
+# This configuration file describes the CP2K code on the HECToR
+# resource and is intended for use with the 'bolt' job submission
+# script generation tool.
+#
+# This file has been annotated with comments describing each
+# option to aid in installing the tool on other systems.
+#
+# All options must be provided in the configuration file even
+# if the value is not specified.
+#
+
+#-------------------------------------------------------------
+# Code description
+#-------------------------------------------------------------
+[code info]
+
+# The name of the code (used for selecting it)
+name: CP2K
+
+# The description of the code to display for information
+description: CP2K is a program to perform atomistic and
+             molecular simulations of solid state, liquid,
+             molecular, and biological systems. It provides a
+             general framework for different methods such as
+             e.g., density functional theory (DFT) using a
+             mixed Gaussian and plane waves approach (GPW) and
+             classical pair and many-body potentials.
+
+# The message will be printed when bolt generates a script
+# for this code.
+runtime message:
+
+
+#-------------------------------------------------------------
+# Job types
+#
+# The executables for different types of jobs. If an entry is
+# blank then this type of job is not available.
+#-------------------------------------------------------------
+[job types]
+
+# Distributed memory (MPI) parallel jobs
+parallel: cp2k.popt
+
+# Serial jobs
+serial: cp2k.sopt
+
+# Hybird distributed-/shared-memory (MPI/OpenMP) parallel jobs
+hybrid: cp2k.psmp
+
+#-------------------------------------------------------------
+# Job limits
+#
+# Any limits on the numbers of cores that can be used for 
+# parallel jobs? If zero then limits are for the 
+# resource are used.
+#-------------------------------------------------------------
+[job limits]
+
+# Maximum number of parallel tasks
+maximum tasks: 0
+
+# Minimum number of parallel tasks
+minimum tasks: 0
+
+#-------------------------------------------------------------
+# Script commands
+#
+# Any addtional commands to go in the script 
+#-------------------------------------------------------------
+[script commands]
+
+# Commands to run before the job
+preamble:  module load cp2k
+
+# Commands to run after the job
+postamble:
