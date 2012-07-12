@@ -413,12 +413,12 @@ def main(argv):
 			# Get the executable from the code description
 			# Are we running parallel or hybrid job
 			if job.threads > 1:
-				if code.hybrid is None:
+				if len(code.hybrid) == 0:
 					error.handleError("Shared-memory threads specified but not supported by code {0}.".format(code.name))
 				else:
 					job.setJobCommand(code.hybrid + " " + code.argFormat.format(*args))
 		        elif job.threads == 1:
-                                if code.parallel is None:
+                                if len(code.parallel) == 0:
 					error.handleError("Parallel job specified but not supported by code {0}.".format(code.name))
 				else:
 					job.setJobCommand(code.parallel + " " + code.argFormat.format(*args))
@@ -435,7 +435,7 @@ def main(argv):
                 else:
 			# Print the message
 			if code.message is not None: sys.stdout.write("Note:\n" + code.message + "\n\n")
-			if code.serial is None:
+			if len(code.serial) == 0:
 				error.handleError("Serial job specified but not supported by code {0}.".format(code.name))
 			else:
 				job.setJobCommand(code.serial + " " + code.argFormat.format(*args))
