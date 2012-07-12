@@ -540,15 +540,16 @@ class Job(object):
         if resource.parallelScriptPostamble != ("" or None):
             scriptFile.write(resource.parallelScriptPostamble + "\n")
         
-    def writeSerialJob(self, batch, resource, scriptFile):
+    def writeSerialJob(self, batch, resource, code, scriptFile):
         """This function writes out a serial job script for the specified
            resource. If errors are encountered then an error message is
            printed and the program exits.
 
            Arguments:
-              Batch    batch     Batch system to use
-              Resource resource  Resource to use
-              str      scriptFileThe name of the script file to write
+              Batch    batch      Batch system to use
+              Resource resource   Resource to use
+              Code     code       Code to use
+              str      scriptFile The name of the script file to write
         """
 
         # Useful variables
@@ -575,11 +576,13 @@ class Job(object):
         # Get any further options from resource configuration
         scriptFile.write(resource.jobOptions)
 
-        # Script preambles: resource -> batch -> job
+        # Script preambles: resource -> batch -> code -> job
         if resource.parallelScriptPreamble != ("" or None):
             scriptFile.write(resource.parallelScriptPreamble + "\n")
         if batch.parallelScriptPreamble != ("" or None):
             scriptFile.write(batch.parallelScriptPreamble + "\n")
+        if code is not None:
+            if code.preamble is not None: scriptFile.write(code.postamble + "\n")
         if self.scriptPreamble != ("" or None):
             scriptFile.write(self.scriptPreamble + "\n")
 
@@ -587,9 +590,11 @@ class Job(object):
         scriptFile.write("# Run the serial program\n")
         scriptFile.write(self.jobCommand + "\n")
 
-        # Script postambles: job -> batch -> resource
+        # Script postambles: job -> code -> batch -> resource
         if self.scriptPostamble != ("" or None):
             scriptFile.write(self.scriptPostamble + "\n")
+        if code is not None:
+            if code.postamble is not None: scriptFile.write(code.postamble + "\n")
         if batch.parallelScriptPostamble != ("" or None):
             scriptFile.write(batch.parallelScriptPostamble + "\n")
         if resource.parallelScriptPostamble != ("" or None):
