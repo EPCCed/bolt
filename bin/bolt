@@ -39,7 +39,7 @@
 This tool produces job submission scripts for a variety of compute
 resources and batch systems. It attempts to partition the work in a
 pseudo-optimal way and select sensible options. It will also include
-compusory options required on particular resources.
+compulsory options required on particular resources.
 
 OPTIONS
 
