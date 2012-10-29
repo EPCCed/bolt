@@ -33,5 +33,5 @@ def printError(errMsg):
         sys.stderr.write(fill("**ERROR** " + errMsg) + "\n\n")
 
 def printWarning(warnMsg):
-        sys.stderr.write(fill("++Warning++ " + warnMsg) + "\n\n")
+        sys.stderr.write(fill("++Warning++ " + warnMsg) + "\n")
 
