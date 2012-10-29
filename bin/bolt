@@ -454,6 +454,7 @@ def main(argv):
 		subprocess.call([batch.submitCommand, outputFileName])
 
 	# Finish nicely
+	sys.stderr.write("\n")
 	exit(0)
 
 def readGlobalConfig(fileName):
