@@ -343,8 +343,7 @@ def main(argv):
 		defaultCPN = resource.numCoresPerNode()
 		# We need to account for the number of threads if > 1
 		if job.threads > resource.numCoresPerNode():
-                        error.handleError("Number of threads requested ({0}) is greater than number of cores per node on resource {1} ({2})
-.".format(job.threads, resource.name, resource.numCoresPerNode()))
+                        error.handleError("Number of threads requested ({0}) is greater than number of cores per node on resource {1} ({2}).".format(job.threads, resource.name, resource.numCoresPerNode()))
 		if job.threads > 1: defaultCPN = defaultCPN / job.threads
 		# Catch the case where there are less than a nodes-worth of tasks
 		defaultCPN = min(job.pTasks * job.threads, defaultCPN)
