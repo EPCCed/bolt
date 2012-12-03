@@ -43,7 +43,7 @@ compulsory options required on particular resources.
 
 OPTIONS
 
--a,--account <account>   Specify the account to charge the job to. If
+-A,--account <account>   Specify the account to charge the job to. If
                          not specified then it is not included in the
                          output.
                          
