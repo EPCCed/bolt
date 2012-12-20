@@ -321,12 +321,12 @@ def main(argv):
 
         # Default job name is the name of the executable
         if job.name is None:
-		if selectedCode is None:
-			error.printWarning("Setting job name to: " + args[0])
-        		job.setName(args[0])
+        	if job.isParallel:
+			error.printWarning("Setting job name to: bolt_par_job")
+        		job.setName("bolt_par_job")
 		else:
-			error.printWarning("Setting job name to: " + selectedCode + "_job")
-        		job.setName(selectedCode + "_job")
+			error.printWarning("Setting job name to: bolt_ser_job")
+        		job.setName("bolt_ser_job")
 
         # Default wall time is 5 minutes
         if job.wallTime is None: 
