@@ -374,13 +374,12 @@ def main(argv):
         # option is supported on the specified resource
 	if taskPerNodeSpecified:
 		if resource.useBatchParallelOpts:
-			if (batch.taskPerNodeOption == "") or \
-                           (batch.taskPerNodeOption is None):
+			if (batch.taskPerNodeOption == "") or (batch.taskPerNodeOption is None):
 				error.printWarning("Tasks per node specified ({0}) but option is not supported on resource {1}. {2} will be used.".format(job.pTasksPerNode, resource.name, min(job.pTasks, resource.numCoresPerNode())))
 				job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
 		else:
-			if (resource.taskPerNodeOption == "")   or \
-			   (resource.taskPerNodeOption == None):
+			if ((resource.taskPerNodeOption == "") or (resource.taskPerNodeOption == None)) and \
+                           ((resource.nodesOption == "") or (resource.nodesOption == None)):
 				error.printWarning("Tasks per node specified ({0}) but option is not supported on resource {1}. {2} will be used.".format(job.pTasksPerNode, resource.name, min(job.pTasks, resource.numCoresPerNode())))
 				job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
 
@@ -403,7 +402,6 @@ def main(argv):
 	if job.isParallel:
 		# Set the job command 
 		if code is None:
-			print "No code"
 			# No code specified, job command is the remaining arguments
 			job.setJobCommand(' '.join(args))
 		else:

@@ -50,7 +50,7 @@ number of tasks option:     -n
 number of nodes option:     -N
 tasks per node option:
 tasks per die option:
-tasks stride option:
+tasks stride option:        -c
 queue name:
 use batch parallel options: False
 additional job options:

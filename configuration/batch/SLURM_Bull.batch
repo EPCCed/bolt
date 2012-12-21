@@ -33,7 +33,7 @@ queue option:      -q
 parallel option:        -n
 task per node option:
 task per die option:
-task stride option:
+task stride option:     -c
 time option:        -T
 additional options:
 script preamble:
