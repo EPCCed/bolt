@@ -136,9 +136,9 @@ class Code(object):
         self.__postamble = codeConfig.get("script commands", "postamble")
 
     def summaryString(self):
-            """Return a string summarising the code.
+        """Return a string summarising the code.
 
-               Return:
-                  str  output  - The string summarising the code
-            """
-            return "*{0}*\n\n{1}\n\n{2}".format(self.name,self.desc,self.message)
+           Return:
+              str  output  - The string summarising the code
+        """
+        return "*{0}*\n\n{1}\n\n{2}".format(self.name,self.desc,self.message)

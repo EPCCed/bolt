@@ -205,58 +205,58 @@ class Batch(object):
         self.__serialScriptPostamble = batchConfig.get("serial options", "script postamble")
 
     def getOptionLines(self, isParallel, jobName, queueName, runtime, accountID):
-            """Generate the batch submission option lines so they can be
-               written to a job script
-            
-               Arguments:
-                  boolean  isParallel - Is this a parallel job?
-                  str      jobName    - The name of the job
-                  str      queueName  - The name of the queue to use
-                  str      runtime    - The job runtime (hh:mm:ss)
-                  str      accountID  - The account ID
+        """Generate the batch submission option lines so they can be
+           written to a job script
+        
+           Arguments:
+              boolean  isParallel - Is this a parallel job?
+              str      jobName    - The name of the job
+              str      queueName  - The name of the queue to use
+              str      runtime    - The job runtime (hh:mm:ss)
+              str      accountID  - The account ID
 
-               Returns:
-                  str  options    - A string containing the correctly
-                                    formatted serial job options.
-            """
+           Returns:
+              str  options    - A string containing the correctly
+                                formatted serial job options.
+        """
 
-            # Common options
-            if (self.nameOption != "") and (self.nameOption is not None) \
-               and (jobName != "") and (jobName is not None):
-                text = self.optionID + " " + self.nameOption + " " + jobName + "\n"
-            if (accountID != "") and (accountID is not None):
-                text = text + self.optionID + " " + self.accountOption + " " + accountID + "\n"
-            if (queueName != "") and (queueName is not None):
-                text = text + self.optionID + " " + self.queueOption + " " + queueName + "\n"
+        # Common options
+        if (self.nameOption != "") and (self.nameOption is not None) \
+           and (jobName != "") and (jobName is not None):
+            text = self.optionID + " " + self.nameOption + " " + jobName + "\n"
+        if (accountID != "") and (accountID is not None):
+            text = text + self.optionID + " " + self.accountOption + " " + accountID + "\n"
+        if (queueName != "") and (queueName is not None):
+            text = text + self.optionID + " " + self.queueOption + " " + queueName + "\n"
 
-            if isParallel:
-                # Parallel options
-                if (self.parallelTimeOption != "") and (self.parallelTimeOption is not None) \
-                   and (runtime != "") and (runtime is not None):
-                        text = text + self.optionID + " " + self.parallelTimeOption + runtime + "\n"
-                if (self.parallelOptions != "") and (self.parallelOptions is not None):
-                    # Split out the parallel options
-                    options = self.parallelOptions.split(";")
-                    for option in options:
-                        text = text + self.optionID + " " + option + "\n"
-            else:
-                # Serial options
-                if (self.serialTimeOption != "") and (self.serialTimeOption is not None) \
-                   and (runtime != "") and (runtime is not None):
-                        text = text + self.optionID + " " + self.serialTimeOption + runtime + "\n"
-                if (self.serialOptions != "") and (self.serialOptions is not None):
-                    # Split out the parallel options
-                    options = self.serialOptions.split(";")
-                    for option in options:
-                        text = text + self.optionID + " " + option + "\n"
+        if isParallel:
+            # Parallel options
+            if (self.parallelTimeOption != "") and (self.parallelTimeOption is not None) \
+               and (runtime != "") and (runtime is not None):
+                    text = text + self.optionID + " " + self.parallelTimeOption + runtime + "\n"
+            if (self.parallelOptions != "") and (self.parallelOptions is not None):
+                # Split out the parallel options
+                options = self.parallelOptions.split(";")
+                for option in options:
+                    text = text + self.optionID + " " + option + "\n"
+        else:
+            # Serial options
+            if (self.serialTimeOption != "") and (self.serialTimeOption is not None) \
+               and (runtime != "") and (runtime is not None):
+                    text = text + self.optionID + " " + self.serialTimeOption + runtime + "\n"
+            if (self.serialOptions != "") and (self.serialOptions is not None):
+                # Split out the parallel options
+                options = self.serialOptions.split(";")
+                for option in options:
+                    text = text + self.optionID + " " + option + "\n"
 
-            text = text + "\n"
-            return text
+        text = text + "\n"
+        return text
 
     def summaryString(self):
-            """Return a string summarising the resource.
+        """Return a string summarising the resource.
 
-               Return:
-                  str  output  - The string summarising the batch system
-            """
-            return "| {0:<10} |".format(self.name)
+           Return:
+              str  output  - The string summarising the batch system
+        """
+        return "| {0:<10} |".format(self.name)

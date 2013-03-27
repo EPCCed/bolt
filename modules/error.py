@@ -26,12 +26,12 @@ __author__ = "A. R. Turner, EPCC"
 from textwrap import fill
 import sys
 def handleError(errMsg, errCode = 1):
-        printError(errMsg)
-        sys.exit(errCode)
+    printError(errMsg)
+    sys.exit(errCode)
 
 def printError(errMsg):
-        sys.stderr.write(fill("**ERROR** " + errMsg) + "\n\n")
+    sys.stderr.write(fill("**ERROR** " + errMsg) + "\n\n")
 
 def printWarning(warnMsg):
-        sys.stderr.write(fill("++Warning++ " + warnMsg) + "\n")
+    sys.stderr.write(fill("++Warning++ " + warnMsg) + "\n")
 
