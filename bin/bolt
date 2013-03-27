@@ -350,15 +350,16 @@ def main(argv):
         defaultCPN = min(job.pTasks * job.threads, defaultCPN)
         job.setTasksPerNode(defaultCPN)
         error.printWarning("Setting number of tasks per node to " + str(defaultCPN))
-        if (job.accountID == "") or (job.accountID is None) and (resource.accountRequired):
-            if resource.defaultAccount == "group":
-                # Get account from *nix group
-                grpinfo = grp.getgrgid(os.getgid())
-                job.setAccountID(grpinfo[0])
-                error.printWarning("Setting accounting code to " + grpinfo[0])
-            elif (resource.defaultAccount != "") or (resource.defaultAccount is not None):
-                job.setAccountID(resource.defaultAccount)
-                error.printWarning("Setting accounting code to " + resource.defaultAccount)
+        
+    if (job.accountID == "") or (job.accountID is None) and (resource.accountRequired):
+        if resource.defaultAccount == "group":
+            # Get account from *nix group
+            grpinfo = grp.getgrgid(os.getgid())
+            job.setAccountID(grpinfo[0])
+            error.printWarning("Setting accounting code to " + grpinfo[0])
+        elif (resource.defaultAccount != "") or (resource.defaultAccount is not None):
+            job.setAccountID(resource.defaultAccount)
+            error.printWarning("Setting accounting code to " + resource.defaultAccount)
 
     # Default queues if needed
     if job.isParallel:
