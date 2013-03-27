@@ -30,6 +30,13 @@ class JobTestCase(unittest.TestCase):
         batch.readConfig(rootDir + configDir + "/" + batchConfig)
         resource = Resource()
         resource.readConfig(rootDir + configDir + "/" + resourceConfig)
+        
+        self.job.setTasks(1024)
+        self.job.setTasksPerNode(resource.numCoresPerNode())
+        
+        self.job.setParallelDistribution(resource, batch)
+        
+        
               
         # To test the functionality of the task distribution we need a resource configured. We can do this by re
         # reading a resource configuration file. We probably need to place a resource configuration file
