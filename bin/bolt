@@ -350,7 +350,11 @@ def main(argv):
         defaultCPN = min(job.pTasks * job.threads, defaultCPN)
         job.setTasksPerNode(defaultCPN)
         error.printWarning("Setting number of tasks per node to " + str(defaultCPN))
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> dev-unittests
     if (job.accountID == "") or (job.accountID is None) and (resource.accountRequired):
         if resource.defaultAccount == "group":
             # Get account from *nix group
