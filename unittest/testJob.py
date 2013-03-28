@@ -5,13 +5,13 @@ from batch import Batch
 from resource import Resource
 from code import Code
 
+configDir = "/unittest/configuration"
+batchConfig = "test.batch"
+resourceConfig = "test.resource"
+codeConfig = "test.code"
+    
 class JobTestCase(unittest.TestCase):
     
-    configDir = "/unittest/configuration"
-    batchConfig = "test.batch"
-    resourceConfig = "test.resource"
-    codeConfig = "test.code"
-
     def setUp(self):
         self.job = Job()
 
@@ -25,22 +25,20 @@ class JobTestCase(unittest.TestCase):
 
     # Test the distribution of parallel tasks (e.g. pure MPI job)
     def testParallelTaskDitribution(self):
+        # Read the configuration files
         rootDir = os.environ['BOLT_DIR']
         batch = Batch()
         batch.readConfig(rootDir + configDir + "/" + batchConfig)
         resource = Resource()
         resource.readConfig(rootDir + configDir + "/" + resourceConfig)
         
+        # Set the parallel distribution
         self.job.setTasks(1024)
         self.job.setTasksPerNode(resource.numCoresPerNode())
-        
+        self.job.setThreads(1)
         self.job.setParallelDistribution(resource, batch)
         
-        
-              
-        # To test the functionality of the task distribution we need a resource configured. We can do this by re
-        # reading a resource configuration file. We probably need to place a resource configuration file
-        # in the test directory to make this work. We would also need a batch configuration file???
+        assert self.job.runLine == "aprun -n 1024 -N 32 -S 8 -d 1", "Pure MPI parallel distribution incorrect."
         
 if __name__ == "__main__":
     unittest.main()
