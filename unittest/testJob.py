@@ -9,17 +9,19 @@ class JobTestCase(unittest.TestCase):
         self.job = Job()
 
     def testName(self):
+        """Set job name"""
         correct = "test"
         self.job.setName(correct)
-        sys.stdout.write("Set job name...")
-        assert self.job.name == correct, "Job name not set correctly = '{0}' (should be '{1}').".format(self.job.name, correct)
-        print "OK"
+        self.assertEqual(self.job.name, correct, "Value= '{0}', Expected= '{1}'".format(self.job.name, correct))
 
     def testParallel(self):
+        """Set parallel job"""
         self.job.setIsParallel(True)
-        sys.stdout.write("Set parallel job...")
         assert self.job.isParallel, "Job is not parallel and should be."
-        print "OK"
+        
+def suite():
+    suite = unittest.makeSuite(JobTestCase,'test')
+    return suite
         
 if __name__ == "__main__":
     unittest.main()
