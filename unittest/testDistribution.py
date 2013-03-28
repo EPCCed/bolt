@@ -44,7 +44,7 @@ class DistributionTestCase(unittest.TestCase):
         self.assertEqual(self.job.runLine, correct, "Value= '{0}', Expected= '{1}'".format(self.job.runLine, correct))
 
     def testParallelTaskDitributionTwoThreads(self):
-        """Hybrid MPI/Open task distribution (2 OpenMP threads)."""
+        """Hybrid MPI/OpenMP task distribution (2 OpenMP threads)."""
         
         # Set the parallel distribution
         self.job.setTasks(1024)
@@ -53,6 +53,18 @@ class DistributionTestCase(unittest.TestCase):
         self.job.setParallelDistribution(self.resource, self.batch)
         
         correct = "export OMP_NUM_THREADS=2\naprun -n 1024 -N 16 -S 4 -d 2"
+        self.assertEqual(self.job.runLine, correct, "Value= '{0}', Expected= '{1}'".format(self.job.runLine, correct))
+
+    def testParallelTaskDitributionThreeThreads(self):
+        """Hybrid MPI/OpenMP task distribution (3 OpenMP threads)."""
+        
+        # Set the parallel distribution
+        self.job.setTasks(1024)
+        self.job.setTasksPerNode(10)
+        self.job.setThreads(3)
+        self.job.setParallelDistribution(self.resource, self.batch)
+        
+        correct = "export OMP_NUM_THREADS=3\naprun -n 1024 -N 10 -d 3"
         self.assertEqual(self.job.runLine, correct, "Value= '{0}', Expected= '{1}'".format(self.job.runLine, correct))
 
 def suite():
