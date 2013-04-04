@@ -48,7 +48,9 @@ Note that the bolt tool is distributed under the
 
 The tool can be downloaded from GitHub at:
 
-https://github.com/aturner-epcc/bolt.git
+#+BEGIN_SRC
+https://github.com/aturner-epcc/bolt
+#+END_SRC
 
 The directory structure should be installed somewhere that is readable by
 all users.
@@ -56,12 +58,22 @@ all users.
 The root of the installation will be referred to as /$BOLT_DIR/ for the
 remainder of this documentation.
 
+** Layout
+
+The 'bolt' distribution contains a number of subdirectories:
+
++ bin/ :: Contains the bolt program
++ configuration/ :: All the configuration files for bolt
++ documentation/ :: User and Administrator manuals
++ modules/       :: Python modules that represent a job, resource, batch
+		    system and handle errors
+
 ** Setup user's environment
 
 In order for the tool to work you need to prepend the directory:
 
 #+BEGIN_SRC BASH
-$BOLT_DIR/module
+$BOLT_DIR/modules
 #+END_SRC
 
 to the /$PYTHONPATH/ environment variable for all users. The directory:
@@ -99,19 +111,137 @@ created or modified:
 3. The global configuration file - sets the default options for this 
    installation. This file is '$BOLT_DIR/configuration/global.config'.
 
+Optionally, you can also create configuration files for individual simulation
+software packages which may be installed centrally on the resource by adding files
+in the '$BOLT_DIR/configuration/codes' directory. The configuration files must
+have the extension '.code' to be recognised by the tool.
+
 There are a number of example configuration files in the distribution which
 may provide a useful starting point for creating your configuration. In
 particular, the files 'HECToR.resource' and 'PBSPro.batch' have been 
 extensively annotated to help explain the meanings of all the settings.
 
-* Layout
+** Resources
 
-The 'bolt' distribution contains a number of subdirectories:
+The resource configuration file defines the options for the compute resource,
+including:
 
-+ bin/ :: Contains the bolt program
-+ configuration/ :: All the configuration files for bolt
-+ documentation/ :: User and Administrator manuals
-+ modules/       :: Python modules that represent a job, resource, batch
-		    system and handle errors
++ Batch system used
++ Number of nodes
++ Node configuration (processors, dies, cores)
++ Queue limits
++ Parallel job launchers
 
+The configuration files for compute resources all reside in:
 
+#+BEGIN_SRC
+$BOLT_DIR/configuration/resources
+#+END_SRC
+
+and must have the extension /.resource/.
+
+The HECToR.resource file has been extensively annotated to assist in setting
+up your own configuration. All options must exist in the file even if they
+do not have a setting.
+
+A full list of options is now presented organised by sections.
+
+*** [System Info]
+
+These options specify general system options and properties.
+
++ =system name= :: A name to identify the system.
++ =system description= :: A short (1 line) description of the system.
++ =job script shell= :: The shell invokation line to place at the top of job
+  submission scripts (/e.g./ !#/bin/bash).
++ =batch system= :: Specify the batch system - this name should match a name
+  set in one of the batch system configuration files (see below).
++ =total nodes= :: The total number of compute nodes available on the resource.
++ =account code required= :: (yes/no) 'yes' an account code option is required
+  in job submission scripts (usually for charging purposes.
++ =default account code= :: If no account code is specified then how does the 
+  tool generate the code? 'group' - use the user's primary *nix group, any
+  other string will be used as the default, no option means no default will
+  be used. Any default is overridden by specifying the '-A' command line 
+  option.
+
+*** [node info]
+
+These options specify the layout of compute resources on a node and how 
+access to these resources is organised.
+
++ =sockets per node= :: Number of processor sockets per node.
++ =dies per socket= :: Number of dies (or NUMA regions) per *socket*.
++ =cores per die= :: Number of cores per *die* (or NUMA region).
++ =exclusive node access= :: (yes/no) 'yes' - no sharing of node resources
+  between different jobs; 'no' - multiple jobs are allowed on a node 
+  simultaneously.
++ =accelerator type= :: Specify the type of accelerator card present on the
+  node (if any). *This option is not currently used in any way.*
+
+*** [parallel jobs]
+
+These options specify the settings for parallel jobs.
+
++ =parallel jobs= :: (yes/no) Specify whether or not parallel jobs are supported
+  on this resource.
++ =hybrid jobs= :: (yes/no) Specify if hybrid distributed-/shared-memory parallel
+  jobs are supported on this resource (e.g. MPI/OpenMP hybrid jobs).
++ =maximum tasks= :: The maximum number of parallel tasks available in the 
+  batch system (may be less than the size of the machine).
++ =minimum tasks= :: The minimum number of parallel tasks available in the
+  batch system for a single job.
++ =maximum job duration= :: The maximum job duration allowed for parallel jobs. 
+  This can either just be a single integer number of whole hours or, if the
+  maximum walltime is dependent on the number of nodes requested it can be a
+  string specifying the maximum walltime (in whole hours) for diffent ranges of
+  *node* counts. The upper range limit can be unspecified if it is required to
+  be the maximum number of nodes available on the system. For example, if the max
+  job duration is 12 hours but can be raised to 24 hours for node counts from 5-128
+  you would use: =1-4:12,5-128:24,129-:12=, i.e. 1-4 nodes have 12 hour maximum;
+  5-128 nodes have 24 hour maximum and 129 upwards have 12 hour maximum.
++ =parallel time format= :: The format for the job time in the job submission 
+  scripts. Valid values are: 'hms' - hh:mm:ss; 'hours' - integer hours; 
+  'seconds' - integer seconds.
++ =preferred task stride= :: Specifies the preferred spacing between parallel task
+  placement on a compute node if the user's job specification has space for striding.
+  Also requires support from the parallel job launching mechanism to support this 
+  level of task pinning to hardware.
++ =parallel reservation unit= :: Define how parallel jobs are specified in a batch
+  script on this resource. Can be 'tasks' (/i.e./ parallel processes) or 'nodes'.
++ =parallel job launcher= :: The parallel job launcher command on the resource 
+  (/e.g./ 'mpiexec' or 'aprun'). If left blank it is assumed that batch system 
+  automatically launches the parallel job (as in some IBM setups).
++ =number of tasks option= :: The command line option to the parallel job
+  launcher command that specifies the number of parallel tasks (/e.g./ -n for
+  'aprun'). Leave blank if there is no parallel job launcher command.
++ =number of nodes option= :: The command line option to the parallel job
+  launcher command that specifies the number of nodes. Leave blank if there is
+  no parallel job launcher command or the option is not supported.
++ =tasks per node option= :: The command line option to the parallel job
+  launcher command that specifies the number of parallel tasks per node (/e.g./ -N
+  for aprun). Leave blank if there is no parallel job launcher command or
+  the option is not supported.
++ =tasks per die option= :: The command line option to the parallel job
+  launcher command that specifies the number of parallel tasks per die (/e.g./ -S
+  for aprun). Leave blank if there is no parallel job launcher command or
+  the option is not supported.
++ =tasks stride option= :: The command line option to the parallel job
+  launcher command that specifies the stride between parallel tasks or the
+  number of OpenMP shared-memory threads per task (/e.g./ -d for aprun).
+  Leave blank if there is no parallel job launcher command or
+  the option is not supported.
++ =queue name= :: The name of the batch queue to use for parallel jobs. Leave
+  blank if not required.
++ =use batch parallel options= :: (yes/no) Specify if we want to use the batch
+  system options to specify the distribution/pinning of tasks. This is only needed
+  if your system does not have a parallel job launcher command and the batch
+  system launches the parallel job instead (/e.g./ LoadLeveler on some IBM 
+  Power and BlueGene systems).
++ =additional job options= :: Any additional batch submission options that need to
+  be added to parallel jobs (without the option identified, /e.g./ no #PBS for
+  PBS jobs).
++ =script preamble commands= :: Any script lines to include in parallel jobs before 
+  the application is launched.
++ =script postamble commands= :: Any script lines to include in parallel jobs after
+  the application has finished.
