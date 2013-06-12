@@ -1,0 +1,47 @@
+#----------------------------------------------------------------------
+# Copyright 2012 EPCC, The University of Edinburgh
+#
+# This file is part of bolt.
+#
+# bolt is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# bolt is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with bolt.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+#
+# BG/Q version of LoadLeveller Batch System
+#
+[system info]
+name: LL_BGQ
+submit command: llsubmit
+
+[basic options]
+option identifier:  #@
+job name option:    job_name =
+account option:     account_no = 
+queue option:       job_type =
+
+[parallel options]
+parallel option:        bg_size = 
+task per node option:       
+task per die option:
+task stride option:
+time option:        wall_clock_limit =
+additional options: output = job$(jobid).out;error = job$(jobid).err;queue
+script preamble:
+script postamble:
+
+[serial options]
+time option:        
+additional options:  
+script preamble:
+script postamble:
+

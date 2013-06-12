@@ -1,0 +1,49 @@
+#----------------------------------------------------------------------
+# Copyright 2012 EPCC, The University of Edinburgh
+#
+# This file is part of bolt.
+#
+# bolt is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# bolt is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with bolt.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+#
+# SuperMUC version of LoadLeveller Batch System
+#
+[system info]
+name: LL_SuperMUC
+submit command: llsubmit
+
+[basic options]
+option identifier:  #@
+job name option:    job_name =
+account option:      
+queue option:       job_type =
+
+[parallel options]
+parallel option:        node = 
+task per node option:   tasks_per_node =     
+task per die option:
+task stride option:
+time option:        wall_clock_limit =
+additional options: class = general;output = job$(jobid).out;error = job$(jobid).err;network.MPI = sn_all,not_shared,us;initialdir = $(home)/myDir;queue
+script preamble: . /etc/profile 
+                 . /etc/profile.d/modules.sh
+                 module load prace
+script postamble:
+
+[serial options]
+time option:       
+additional options: 
+script preamble:
+script postamble:
+

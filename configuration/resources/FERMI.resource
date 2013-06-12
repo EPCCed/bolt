@@ -17,19 +17,6 @@
 # along with bolt.  If not, see <http://www.gnu.org/licenses/>.
 #----------------------------------------------------------------------
 #
-# HECToR Resource
-# ===============
-#
-# This configuration file describes the Stokes compute resource:
-#    http://www.hector.ac.uk
-# for the 'bolt' job script generation tool.
-#
-# This file has been annotated with comments describing each
-# option to aid installing the tool on other systems.
-#
-# All options must be provided in the configuration file even
-# if the value is not specified.
-#
 
 #------------------------------------------------------------------
 # System description
@@ -42,22 +29,22 @@
 # The name of the system and a short description of the 
 # compute architecture (only used for information 
 # purposes)
-system name:           HECToR
-system description:    Cray XE6 (32-core per node)
+system name:           FERMI
+system description:    IBM-BlueGene/Q
 
 # Specify the shell definition line that will be placed
 # at the top of every job submission script
-job script shell:      #!/bin/bash --login
+job script shell:      #!/bin/bash
 
 # Specify the batch system name - the name must correcpond
 # to the name of a system defined in the corresponding batch
 # system configuration files
-batch system:          PBSPro
+batch system:          LL_BGQ
 
 # Total number of compute nodes on the system (currently used
 # to calculate the number of cores available for information
 # purposes only)
-total nodes:           2816
+total nodes:           10240
 
 # Are job submission scripts required to set an account ID option
 # (usually for charging purposes). 
@@ -70,7 +57,7 @@ account code required: yes
 # not specified then there will be no default. Users 
 # can override the default by using the appropriate command
 # line option.
-default account code:  group
+default account code: PRACE_staff
 
 #------------------------------------------------------------------
 # Node definition
@@ -84,16 +71,16 @@ default account code:  group
 [node info]
 
 # The number of physical processor sockets per node
-sockets per node:      2
+sockets per node:      1
 
 # The number of dies (or NUMA regoins) per socket
-dies per socket:       2
+dies per socket:      1
 
 # The number of cores per die
-cores per die:         8
+cores per die:         16
 
 # The number of threads per core (hyperthreading)
-threads per core:      1
+threads per core:      4
 
 # Does each job have exclusive access to a compute node (even
 # if it uses less than the total number of cores per node) or
@@ -115,33 +102,17 @@ accelerator type:
 # Specify whether or not parallel jobs are available
 parallel jobs:              yes
 
-# Specify whether or not hybrid (distributed-/shared-memory) jobs
-# are available
-hybrid jobs:               yes
+# Specify whether or not parallel jobs are available
+hybrid jobs:                yes
 
 # The maximum number of parallel tasks allowed for a single job
-maximum tasks:              65536
+maximum tasks:              32768
 
 # The minimum number of parallel tasks needed for a single job
-minimum tasks:              1
+minimum tasks:              1024
 
-# The maximum job duration allowed for parallel jobs
-# This can either just be a single integer number of whole 
-# hours or, if the maximum walltime is dependent on the number
-# of nodes requested it can be a string specifying the maximum
-# walltime (in whole hours) for diffent ranges of *node* counts.
-# The upper range limit can be unspecified if it is required to
-# be the maximum number of nodes available on the system.
-# 
-# For example, if the max job duration is 12 hours but 
-# can be raised to 24 hours for node counts from 5-128 you 
-# would use:
-#
-#      1-4:12,5-128:24,129-:12
-#
-# i.e. 1-4 nodes have 12 hour maximum; 5-128 nodes have 24
-# hour maximum and 129 upwards have 12 hour maximum.
-maximum job duration:       1-4:12,5-128:24,129-:12
+# The maximum job duration (in whole hours) allowed for parallel jobs
+maximum job duration:       1-64:1,65-2048:24
 
 # The format that the parallel job time will be printed in in
 # the job submission script. Valid values are:
@@ -154,17 +125,17 @@ parallel time format:       hms
 # (if the number of tasks per node specified allows this 
 # flexibility and the job launcher supports task placement at
 # this level).
-preferred task stride:      2        ; tasks
+preferred task stride:      1
 
-# Define how parallel resources are requested in a batch script. Valid
+# Define how parallel resources are rquested in a batch script. Valid
 # values are:
 #  + 'tasks' - Number of tasks is used
 #  + 'nodes' - Number of nodes is used
-parallel reservation unit:  tasks    ; can be 'tasks' or 'nodes'
+parallel reservation unit:  nodes    ; can be 'tasks' or 'nodes'
 
 # The command line option to the job launcher command that specifies
 # the number of parallel tasks
-number of tasks option:    -n
+number of tasks option:     -n
 
 # The command line option to the job launcher command that specifies
 # the number of nodes to use
@@ -173,21 +144,21 @@ number of nodes option:
 # The command line option to the job launcher command that specifies
 # the number of tasks per node (if blank, tool assumes that this 
 # functionality is not supported).
-tasks per node option:      -N
+tasks per node option:      -p
 
 # The command line option to the job launcher command that specifies
 # the number of tasks per die (if blank, tool assumes that this 
 # functionality is not supported).
-tasks per die option:       -S
+tasks per die option:      
 
 # The command line option to the job launcher command that specifies
 # the stride between parallel tasks (if blank, tool assumes that this 
 # functionality is not supported).
-tasks stride option:        -d
+tasks stride option:       
 
 # The queue name to use for parallel jobs (if blank, it is assumed that
 # no queue name is needed)
-queue name:
+queue name:   bluegene
 
 # Do we want to use the batch system to specify the distribution of
 # tasks? This is only usually needed if your system does not have 
@@ -201,19 +172,18 @@ use batch parallel options: False
 # The parallel job launcher command (for example, 'mpiexec' or 'aprun')
 # If this is unset then we assume that the batch system automatically
 # launches the parallel job.
-parallel job launcher:      aprun
+parallel job launcher:      runjob
 
 # Any addtional batch submission options to add to parallel
 # jobs (without the option ID).
-additional job options:  
+additional job options:   
 
 # Any script lines to include in parallel jobs before the
 # application is launched
-script preamble commands:   # Switch to current working directory
-                            cd $PBS_O_WORKDIR
+script preamble commands:
 
 # Additional commands to come before the actual executable
-executable job options: 
+executable job options:        --exe
 
 # Any script lines to include in parallel jobs after the
 # application has finished
@@ -224,7 +194,7 @@ script postamble commands:
 # The parallel job launcher command (for example, 'mpiexec' or 'aprun')
 # If this is unset then we assume that the batch system automatically
 # launches the parallel job.
-parallel job launcher:      aprun
+parallel job launcher:
 
 # Any addtional batch submission options to add to parallel
 # jobs (without the option ID).
@@ -232,22 +202,22 @@ additional job options:
 
 # Any script lines to include in parallel jobs before the
 # application is launched
-script preamble commands:    # Switch to current working directory
-                            cd $PBS_O_WORKDIR
+script preamble commands:
 
-# Additional commands to come before the actual executable
-executable job options: 
+# Additional commands to come before the actual	executable
+executable job options:	       
 
 # Any script lines to include in parallel jobs after the
 # application has finished
 script postamble commands:
+
 
 [hybrid jobs]
 
 # The parallel job launcher command (for example, 'mpiexec' or 'aprun')
 # If this is unset then we assume that the batch system automatically
 # launches the parallel job.
-parallel job launcher:      aprun
+parallel job launcher:      runjob
 
 # Any addtional batch submission options to add to parallel
 # jobs (without the option ID).
@@ -255,15 +225,15 @@ additional job options:
 
 # Any script lines to include in parallel jobs before the
 # application is launched
-script preamble commands:   # Switch to current working directory
-                            cd $PBS_O_WORKDIR
+script preamble commands:
 
-# Additional commands to come before the actual executable
-executable job options:      -npernode $(( 12 / $OMP_NUM_THREADS ))
+# Additional commands to come before the actual	executable
+executable job options:	     --exp-env OMP_NUM_THREADS --exe
 
 # Any script lines to include in parallel jobs after the
 # application has finished
 script postamble commands:
+
 
 #------------------------------------------------------------------
 # Settings for serial jobs
@@ -274,11 +244,10 @@ script postamble commands:
 [serial jobs]
 
 # Specify whether or not serial jobs are available
-serial jobs:               yes
+serial jobs:               no
 
 # The maximum job duration (in whole hours) allowed for serial jobs
-#Longer walltimes not advised, will result in longer queue times
-maximum job duration:     12
+maximum job duration:      6
 
 # The format that the parallel job time will be printed in in
 # the job submission script. Valid values are:
@@ -289,7 +258,7 @@ serial time format:       hms
 
 # The queue name to use for serial jobs (if blank, it is assumed that
 # no queue name is needed)
-queue name:               serial
+queue name:   serial             
 
 # Any addtional batch submission options to add to serial
 # jobs (without the option ID).
@@ -298,7 +267,7 @@ additional job options:
 # Any script lines to include in parallel jobs before the
 # application is launched
 script preamble commands:   # Switch to current working directory
-                            cd $PBS_O_WORKDIR
+                            # cd $CINECA_SCRATCH
 
 # Any script lines to include in parallel jobs after the
 # application has finished

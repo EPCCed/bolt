@@ -28,6 +28,7 @@ __author__ = "Andrew Turner, EPCC"
 import re
 import math
 import error
+import sys
 
 class Job(object):
     """This class represents a batch job."""
@@ -37,6 +38,9 @@ class Job(object):
         self.__wallTime = None
         self.__queueName = None
         self.__isParallel = False
+        self.__isDistrib = False
+        self.__isShared = False
+        self.__isHybrid = False
         self.__pTasks = 0
         self.__pTasksPerNode = 0
         self.__pTasksPerDie = 0
@@ -44,8 +48,11 @@ class Job(object):
         self.__runLine = None
         self.__pBatchOptions = None
         self.__batchOptions = None
-        self.__scriptPreamble = None
-        self.__scriptPostamble = None
+        self.__parallelScriptPreamble = None
+        self.__parallelScriptPostamble = None
+        self.__jobOptions = None
+        self.__execJobOptions = None
+        self.__parallelJobLauncher = None 
         self.__jobCommand = None
         self.__accountID = None
 
@@ -140,11 +147,40 @@ class Job(object):
         return self.__isParallel
     def setIsParallel(self, p):
         """Set whether or not this is a parallel job.
-
            Arguments:
               boolean  p True = parallel job; False = serial job
         """
         self.__isParallel = p
+    @property
+    def isDistrib(self):
+        """boolean True = distributed memory job."""
+        return self.__isDistrib
+    def setIsDistrib(self, di):
+        """Set whether or not this is a distributed memory job.
+                  Arguments:
+                  boolean  di True = distributed-memory job.
+        """
+        self.__isDistrib = di
+    @property
+    def isShared(self):
+        """boolean True = shared memory job."""
+        return self.__isShared
+    def setIsShared(self, sh):
+        """Set whether or not this is a shared memory job.
+                  Arguments:                
+                  boolean  sh True = shared-memory job.
+        """
+        self.__isShared = sh
+    @property
+    def isHybrid(self):
+        """boolean True = shareded memory job."""
+        return self.__isHybrid
+    def setIsHybrid(self, hy):
+        """Set whether or not this is a hybrid job.                                   
+           Arguments:
+                  boolean  hy True = hybrid job.
+        """
+        self.__isHybrid = hy
     @property
     def pTasks(self):
         """int The number of parallel tasks for the job."""
@@ -251,6 +287,7 @@ class Job(object):
         # the number of threads then this should be the stride
         strideUsed = 1
         if (self.threads > 1):
+#            sys.stdout.write("We have %i threads \n" % self.threads )
             strideUsed = self.threads
             if "csh" in resource.shell:
                 runLine = "setenv OMP_NUM_THREADS " + str(self.threads) + "\n"
@@ -265,10 +302,12 @@ class Job(object):
             
 
         # Test to see if we have a parallel run command
-        runCommand = resource.parallelJobLauncher
+        runCommand = self.parallelJobLauncher
         useRunCommand = True
         if (runCommand == None) or (runCommand == ""):
             useRunCommand = False
+            # To keep the exporting of OMP-threads
+            self.__runLine = runLine
             # No job launcher command, are we using batch options instead?
             if not resource.useBatchParallelOpts:
                 error.handleError("No parallel run command or batch options to use.\n", 1)
@@ -279,19 +318,26 @@ class Job(object):
         # Settings for using parallel job launcher
         if useRunCommand:
 
+          if batch.name == 'TorqueStokes':
+            option = resource.parallelTaskOption
+            if (option is None) or (option == ""):
+                error.handleError("The job launcher parallel task option is not set.\n", 1)
+            elif self.pTasks == 0:
+                error.handleError("The number of parallel tasks has not been set.\n", 1)
+            runline = "{0}{1} {2} {3}".format(runLine, self.parallelJobLauncher, option, self.pTasks)
+            self.__runLine = runline
+          else:
             # Most basic is just the parallel command and number of tasks
             option = resource.parallelTaskOption
             if (option is None) or (option == ""):
                 error.handleError("The job launcher parallel task option is not set.\n", 1)
             elif self.pTasks == 0:
                 error.handleError("The number of parallel tasks has not been set.\n", 1)
-            runline = "{0}{1} {2} {3}".format(runLine, resource.parallelJobLauncher, option, self.pTasks)
-
+            runline = "{0}{1} {2} {3}".format(runLine, self.parallelJobLauncher, option, self.pTasks)
             # Can we control the nodes used?
             option = resource.nodesOption
             if ((option != "") and (option is not None)) and (self.pTasksPerNode > 0):
-                runline = "{0} {1} {2}".format(runline, option, nodesUsed)
-
+             runline = "{0} {1} {2}".format(runline, option, nodesUsed) 
             # Can we control the number of tasks per node?
             option = resource.taskPerNodeOption
             if ((option != "") and (option is not None)) and (self.pTasksPerNode > 0):
@@ -308,7 +354,6 @@ class Job(object):
                 runline = "{0} {1} {2}".format(runline, option, strideUsed) 
             
             self.__runLine = runline
-
 
         #-------------------------------------------------------------------------------------------
         # Settings for using parallel batch options
@@ -336,13 +381,17 @@ class Job(object):
             error.handleError("Unit of resource: {0} is not defined (use 'tasks' or 'nodes') in resource configuration file for resource: {1}.\n".format(resource.parallelBatchUnit, resource.name))
         # Set the option
         pBatchOptions = "{0} {1}{2}\n".format(batch.optionID, option, pUnits)
-
         # Additional options if we need them
         if resource.useBatchParallelOpts:
             # Can we control the number of tasks per node?
             option = batch.taskPerNodeOption
             if (option != "") and (option is not None) and (self.pTasksPerNode > 0):
-                pBatchOptions = "{0}{1} {2}{3}\n".format(pBatchOptions, batch.optionID, option, self.pTasksPerNode)
+                if batch.name == 'TorqueStokes':
+
+                    pBatchOptions = "{0}{1}{2}\n".format(pBatchOptions, batch.optionID, option)                   
+                else:
+
+                    pBatchOptions = "{0}{1} {2}{3}\n".format(pBatchOptions, batch.optionID, option, self.pTasksPerNode)
 
             # Can we control the number of tasks per die?
             option = batch.taskPerDieOption
@@ -356,17 +405,49 @@ class Job(object):
 
 
         self.__pBatchOptions = pBatchOptions
-
     @property
-    def scriptPreamble(self):
+    def parallelJobLauncher(self):
+       """ str   """
+       return self.__parallelJobLauncher
+    def setParallelJobLauncher(self,p):
+        """" Set according to type of job, ie. distributed, shared or hybrid.                              Arguments: p """
+        self.__parallelJobLauncher = p
+    @property
+    def jobOptions(self):
+        """ str """
+        return self.__jobOptions
+    def setJobOptions(self,p):
+        """ Set according to type of job, ie. distributed, shared or hybrid.
+             Arguments: p """
+        self.__jobOptions = p
+    @property
+    def parallelScriptPreamble(self):
         """str Any script commands that need to be run before the
                   application is launched"""
-        return self.__scriptPreamble
+        return self.__parallelScriptPreamble
+    def setParallelScriptPreamble(self,p):
+        """ Set according to job type, i.e. for distributed, shared or hybrid job.
+             Arguments:
+             p """
+        self.__parallelScriptPreamble = p
     @property
-    def scriptPostamble(self):
+    def execJobOptions(self):
+        """ str """
+        return self.__execJobOptions
+    def setExecJobOptions(self,p):
+        """" Set according to type of job, ie. distributed, shared or hybrid.                       
+             Arguments: p """
+        self.__execJobOptions = p
+    @property
+    def parallelScriptPostamble(self):
         """str Any script commands that need to be run after the
                   application is complete"""
-        return self.__scriptPostamble
+        return self.__parallelScriptPostamble
+    def setParallelScriptPostamble(self,p):
+        """ Set according to job type, i.e. for distributed, shared or hybrid job.            
+             Arguments:                                                                       
+             p """
+        self.__parallelScriptPostamble = p 
     @property
     def jobCommand(self):
         """str The name of the executable (or possibly script) to run"""
@@ -409,16 +490,21 @@ class Job(object):
             error.handleError("Resource {0} does not support parallel jobs.".format(resource.name))
 
         # Check we do not have more tasks per node than tasks
+        # EYB
         if self.pTasksPerNode > self.pTasks:
-            tpn = min(self.pTasks, resource.numCoresPerNode())
+            tpn = min(self.pTasks, resource.numLogicalCoresPerNode())
+            sys.stdout.write("In Job.py, reducing Logical threads per node: " +str(tpn)+"\n")
             error.printWarning("Number of specified parallel tasks per node ({0}) is greater than the number of specified parallel tasks ({1}). Reducing tasks per node to {2}.".format(self.pTasksPerNode, self.pTasks, tpn))
             self.setTasksPerNode(tpn)
 
         # Check the number of tasks per node
-        if self.pTasksPerNode > resource.numCoresPerNode():
-            tpn = resource.numCoresPerNode()
-            error.printWarning("Number of specified parallel tasks per node ({0}) is greater than number available for resource {1} ({2}). Reducing tasks per node to {3}.".format(self.pTasksPerNode, resource.name, resource.numCoresPerNode(), tpn))
-            self.setTasksPerNode(resource.numCoresPerNode())
+        # EYB
+        if self.pTasksPerNode > resource.numLogicalCoresPerNode():
+            tpn = resource.numLogicalCoresPerNode()
+            sys.stdout.write("Job.py, reducing Logical threads per node: " +str(tpn)+"\n")
+            error.printWarning("Number of specified parallel tasks per node ({0}) is greater than number available for resource {1} ({2}). Reducing tasks per node to {3}.".format(self.pTasksPerNode, resource.name, resource.numLogicalCoresPerNode(), tpn))
+            self.setTasksPerNode(resource.numLogicalCoresPerNode())
+        
 
         # Check that we support hybrid jobs if it has been requested
         if (self.threads > 1) and (self.pTasks > 1) and (not resource.hybridJobs):
@@ -428,7 +514,7 @@ class Job(object):
         # is consistent
         # Do we have enough cores on a node
         coresPerNodeRequired = self.pTasksPerNode * self.threads
-        if coresPerNodeRequired > resource.numCoresPerNode():
+        if coresPerNodeRequired > resource.numLogicalCoresPerNode():
             error.handleError("Number of cores per node required ({0}) is greater than number available for resource {1} ({2}). Reduce number of threads per task or tasks per node".format(coresPerNodeRequired, resource.name, resource.numCoresPerNode()))
      
 
@@ -464,13 +550,19 @@ class Job(object):
 
         # Number of nodes needed for this job
         nodesUsed = self.pTasks / self.pTasksPerNode
+        if self.isParallel:
+            sys.stdout.write(" ")
+        else:
+            sys.stdout.write(" ")
+            if self.wallTime > float(resource.maxSerialJobTime):error.handleError("Requested walltime ({0} hours) longer than maximum allowed on resource {1} for this number of nodes ({2} hours).".format(self.wallTime, resource.name, resource.maxSerialJobTime))
+
         if (self.pTasks % self.pTasksPerNode) > 0:
             nodesUsed += 1
-
-        # Check of we have requested a consistent job length
+            
+            # Check of we have requested a consistent job length
         if self.wallTime > float(resource.maxJobTimeByNodes(nodesUsed)):
-           error.handleError("Requested walltime ({0} hours) longer than maximum allowed on resource {1} for this number of nodes ({2} hours).".format(self.wallTime, resource.name, resource.maxJobTimeByNodes(nodesUsed)))
-
+            error.handleError("Requested walltime ({0} hours) longer than maximum allowed on resource {1} for this number of nodes ({2} hours).".format(self.wallTime, resource.name, resource.maxJobTimeByNodes(nodesUsed)))
+                
     #======================================================================
     # Writing methods write out the job
     def writeParallelJob(self, batch, resource, code, scriptFile):
@@ -495,13 +587,14 @@ class Job(object):
         # The shell line
         text = resource.shell + "\n"
         scriptFile.write(text)
+       
 
         # Information lines
         scriptFile.write("#\n# Parallel script produced by bolt\n")
         scriptFile.write("#        Resource: {0} ({1})\n".format(resource.name, resource.arch))
         scriptFile.write("#    Batch system: {0}\n#\n".format(batch.name))
         scriptFile.write("# bolt is written by EPCC (http://www.epcc.ed.ac.uk)\n#\n")
-
+        sys.stdout.write("The batch system used for parallel script is: " +batch.name+"\n")
         # Get the parallel batch options
         scriptFile.write(self.pBatchOptions)
             
@@ -511,34 +604,32 @@ class Job(object):
         scriptFile.write(text)
 
         # Get any further options from resource configuration
-        scriptFile.write(resource.jobOptions)
+        scriptFile.write(self.jobOptions+"\n")
 
         # Script preambles: resource -> batch -> code -> job
-        if resource.parallelScriptPreamble != ("" or None):
-            scriptFile.write(resource.parallelScriptPreamble + "\n")
+        if self.parallelScriptPreamble != ("" or None):
+            scriptFile.write(self.parallelScriptPreamble + "\n")
         if batch.parallelScriptPreamble != ("" or None):
             scriptFile.write(batch.parallelScriptPreamble + "\n")
         if code is not None:
             if code.preamble is not None: scriptFile.write(code.preamble + "\n")
-        if self.scriptPreamble != ("" or None):
-            scriptFile.write(self.scriptPreamble + "\n")
-
+#        if self.parallelScriptPreamble != ("" or None):
+#            scriptFile.write(self.parallelScriptPreamble + "\n")
         # Parallel run line
         scriptFile.write("# Run the parallel program\n")
         if self.runLine is None:
             scriptFile.write(self.jobCommand + "\n")
         else:
             scriptFile.write(self.runLine + " " + self.jobCommand + "\n")
-
         # Script postambles: job -> code -> batch -> resource
-        if self.scriptPostamble != ("" or None):
-            scriptFile.write(self.scriptPostamble + "\n")
+        if self.parallelScriptPostamble != ("" or None):
+            scriptFile.write(self.parallelScriptPostamble + "\n")
         if code is not None:
             if code.postamble is not None: scriptFile.write(code.postamble + "\n")
         if batch.parallelScriptPostamble != ("" or None):
             scriptFile.write(batch.parallelScriptPostamble + "\n")
-        if resource.parallelScriptPostamble != ("" or None):
-            scriptFile.write(resource.parallelScriptPostamble + "\n")
+        if self.parallelScriptPostamble != ("" or None):
+            scriptFile.write(self.parallelScriptPostamble + "\n")
         
     def writeSerialJob(self, batch, resource, code, scriptFile):
         """This function writes out a serial job script for the specified
@@ -574,29 +665,29 @@ class Job(object):
         scriptFile.write(text)
 
         # Get any further options from resource configuration
-        scriptFile.write(resource.jobOptions)
+        scriptFile.write(resource.serialJobOptions)
 
         # Script preambles: resource -> batch -> code -> job
-        if resource.parallelScriptPreamble != ("" or None):
-            scriptFile.write(resource.parallelScriptPreamble + "\n")
+        if resource.serialScriptPreamble != ("" or None):
+            scriptFile.write(resource.serialScriptPreamble + "\n")
         if batch.parallelScriptPreamble != ("" or None):
             scriptFile.write(batch.parallelScriptPreamble + "\n")
         if code is not None:
             if code.preamble is not None: scriptFile.write(code.postamble + "\n")
-        if self.scriptPreamble != ("" or None):
-            scriptFile.write(self.scriptPreamble + "\n")
+        if self.parallelScriptPreamble != ("" or None):
+            scriptFile.write(self.parallelScriptPreamble + "\n")
 
         # Serial run line
         scriptFile.write("# Run the serial program\n")
         scriptFile.write(self.jobCommand + "\n")
 
         # Script postambles: job -> code -> batch -> resource
-        if self.scriptPostamble != ("" or None):
-            scriptFile.write(self.scriptPostamble + "\n")
+        if self.parallelScriptPostamble != ("" or None):
+            scriptFile.write(self.paralleScriptPostamble + "\n")
         if code is not None:
             if code.postamble is not None: scriptFile.write(code.postamble + "\n")
         if batch.parallelScriptPostamble != ("" or None):
             scriptFile.write(batch.parallelScriptPostamble + "\n")
-        if resource.parallelScriptPostamble != ("" or None):
-            scriptFile.write(resource.parallelScriptPostamble + "\n")
+        if resource.serialScriptPostamble != ("" or None):
+            scriptFile.write(resource.serialScriptPostamble + "\n")
         

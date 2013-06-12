@@ -26,6 +26,9 @@ the [ConfigParser] module.
 Note: then no checking for reasonable values is currently performed.
 """
 __author__ = "A. R. Turner, EPCC"
+
+import sys
+
 class Resource(object):
     """This class represents an compute resource. Resources are currently
        defined using configuration file via the [ConfigParser] module"""
@@ -44,6 +47,7 @@ class Resource(object):
         self.__diesPerSocket = 0
         self.__coresPerDie = 0
         self.__nodeExclusive = False
+        self.__threadsPerCore = 0
         self.__accelerator = False
 
         self.__parallelJobs = False
@@ -54,7 +58,6 @@ class Resource(object):
         self.__parallelTimeFormat = None
         self.__preferredStride = 0
         self.__parallelBatchUnit = None
-        self.__parallelJobLauncher = None
         self.__parallelTaskOption = None
         self.__nodesOption = None
         self.__taskPerNodeOption = None
@@ -62,9 +65,24 @@ class Resource(object):
         self.__taskStrideOption = None
         self.__parallelQueue = None
         self.__useBatchParallelOpts = False
-        self.__jobOption = None
-        self.__parallelScriptPreamble = None
-        self.__parallelScriptPostamble = None
+
+        self.__distribJobLauncher = None
+        self.__distribJobOptions = None
+        self.__distribScriptPreamble = None
+        self.__distribExecJobOptions = None
+        self.__distribScriptPostamble = None
+
+        self.__sharedJobLauncher = None
+        self.__sharedJobOptions = None
+        self.__sharedScriptPreamble = None
+        self.__sharedExecJobOptions = None
+        self.__sharedScriptPostamble = None
+
+        self.__hybridJobLauncher = None
+        self.__hybridJobOptions = None
+        self.__hybridScriptPreamble = None
+        self.__hybridExecJobOptions = None
+        self.__hybridScriptPostamble = None
 
         self.__serialJobs = False
         self.__maxSerialJobTime = 0
@@ -119,6 +137,10 @@ class Resource(object):
     def coresPerDie(self):
         """The number of cores per dies (or NUMA region) on a compute node"""
         return self.__coresPerDie
+    @property
+    def threadsPerCore(self):
+        """The number of threads per core(SMT/hyperthreading) on a compute node"""
+        return self.__threadsPerCore
     @property
     def nodeExclusive(self):
         """Do jobs have exclusive access to a compute node?"""
@@ -186,9 +208,17 @@ class Resource(object):
         either 'tasks' or 'nodes'"""
         return self.__parallelBatchUnit
     @property
-    def parallelJobLauncher(self):
+    def distribJobLauncher(self):
         """The parallel job launcher command (e.g. 'mpiexec')"""
-        return self.__parallelJobLauncher
+        return self.__distribJobLauncher
+    @property
+    def sharedJobLauncher(self):
+        """The parallel job launcher command (e.g. 'mpiexec')"""
+        return self.__sharedJobLauncher
+    @property
+    def hybridJobLauncher(self):
+        """The parallel job launcher command (e.g. 'mpiexec')"""
+        return self.__hybridJobLauncher
     @property
     def parallelTaskOption(self):
         """Command-line option to job launcher command that sets the
@@ -229,19 +259,59 @@ class Resource(object):
         launcher command."""
         return self.__useBatchParallelOpts
     @property
-    def jobOptions(self):
+    def distribJobOptions(self):
         """Any additional job options needed for parallel jobs"""
-        return self.__jobOptions
+        return self.__distribJobOptions
     @property
-    def parallelScriptPreamble(self):
+    def sharedJobOptions(self):
+        """Any additional job options needed for parallel jobs"""
+        return self.__sharedJobOptions
+    @property
+    def hybridJobOptions(self):
+        """Any additional job options needed for parallel jobs"""
+        return self.__hybridJobOptions
+    @property
+    def distribScriptPreamble(self):
         """Commands to be run in the script before the parallel executable
            is launched"""
-        return self.__parallelScriptPreamble
+        return self.__distribScriptPreamble
     @property
-    def parallelScriptPostamble(self):
+    def sharedScriptPreamble(self):
+        """Commands to be run in the script before the parallel executable
+            is launched"""
+        return self.__sharedScriptPreamble
+    @property
+    def hybridScriptPreamble(self):
+        """Commands to be run in the script before the parallel executable
+           is launched"""
+        return self.__hybridScriptPreamble
+    @property
+    def distribExecJobOptions(self):
+        """Any additional job options before the exectubale needed for distrib-memory jobs"""
+        return self.__distribExecJobOptions
+    @property
+    def sharedExecJobOptions(self):
+        """Any additional job options before the exectubale needed for shared-memory jobs"""
+        return self.__sharedExecJobOptions
+    @property
+    def hybridExecJobOptions(self):
+        """Any additional job options before the exectubale needed for hybrid jobs"""
+        return self.__hybridExecJobOptions
+    @property
+    def distribScriptPostamble(self):
         """Commands to be run in the script after the parallel executable
            is finished"""
-        return self.__parallelScriptPostamble
+        return self.__distribScriptPostamble
+    @property
+    def sharedScriptPostamble(self):
+        """Commands to be run in the script after the parallel executable                              
+           is finished"""
+        return self.__sharedScriptPostamble
+    @property
+    def hybridScriptPostamble(self):
+        """Commands to be run in the script after the parallel executable                          
+            is finished"""
+        return self.__hybridScriptPostamble
 
     # Serial job settings
     @property
@@ -303,33 +373,53 @@ class Resource(object):
         self.__socketsPerNode = resourceConfig.getint("node info", "sockets per node")
         self.__diesPerSocket = resourceConfig.getint("node info", "dies per socket")
         self.__coresPerDie = resourceConfig.getint("node info", "cores per die")
+        self.__threadsPerCore = resourceConfig.getint("node info", "threads per core")
         self.__nodeExclusive = resourceConfig.getboolean("node info", "exclusive node access")
         self.__accelerator = resourceConfig.get("node info", "accelerator type")
 
-        # Get the parallel jobs options
-        self.__parallelJobs = resourceConfig.getboolean("parallel jobs", "parallel jobs")
-        self.__hybridJobs = resourceConfig.getboolean("parallel jobs", "hybrid jobs")
-        self.__maxTasks = resourceConfig.getint("parallel jobs", "maximum tasks")
-        self.__minTasks = resourceConfig.getint("parallel jobs", "minimum tasks")
-        self.__maxJobTime = resourceConfig.get("parallel jobs", "maximum job duration")
-        self.__parallelTimeFormat = resourceConfig.get("parallel jobs", "parallel time format")
-        self.__preferredStride = resourceConfig.getint("parallel jobs", "preferred task stride")
-        self.__parallelBatchUnit = resourceConfig.get("parallel jobs", "parallel reservation unit")
-        self.__parallelJobLauncher = resourceConfig.get("parallel jobs", "parallel job launcher")
-        self.__parallelTaskOption = resourceConfig.get("parallel jobs", "number of tasks option")
-        self.__nodesOption = resourceConfig.get("parallel jobs", "number of nodes option")
-        self.__taskPerNodeOption = resourceConfig.get("parallel jobs", "tasks per node option")
-        self.__taskPerDieOption = resourceConfig.get("parallel jobs", "tasks per die option")
-        self.__taskStrideOption = resourceConfig.get("parallel jobs", "tasks stride option")
-        self.__parallelQueue = resourceConfig.get("parallel jobs", "queue name")
-        self.__useBatchParallelOpts = resourceConfig.getboolean("parallel jobs", "use batch parallel options")
-        self.__jobOptions = resourceConfig.get("parallel jobs", "additional job options")
-        self.__parallelScriptPreamble = resourceConfig.get("parallel jobs", "script preamble commands")
-        self.__parallelScriptPostamble = resourceConfig.get("parallel jobs", "script postamble commands")
+        # Get the general parallel jobs options
+        self.__parallelJobs = resourceConfig.getboolean("general parallel jobs", "parallel jobs")
+        self.__hybridJobs = resourceConfig.getboolean("general parallel jobs", "hybrid jobs")
+        self.__maxTasks = resourceConfig.getint("general parallel jobs", "maximum tasks")
+        self.__minTasks = resourceConfig.getint("general parallel jobs", "minimum tasks")
+        self.__maxJobTime = resourceConfig.get("general parallel jobs", "maximum job duration")
+        self.__parallelTimeFormat = resourceConfig.get("general parallel jobs", "parallel time format")
+        self.__preferredStride = resourceConfig.getint("general parallel jobs", "preferred task stride")
+        self.__parallelBatchUnit = resourceConfig.get("general parallel jobs", "parallel reservation unit")
+        self.__parallelTaskOption = resourceConfig.get("general parallel jobs", "number of tasks option")
+        self.__nodesOption = resourceConfig.get("general parallel jobs", "number of nodes option")
+        self.__taskPerNodeOption = resourceConfig.get("general parallel jobs", "tasks per node option")
+        self.__taskPerDieOption = resourceConfig.get("general parallel jobs", "tasks per die option")
+        self.__taskStrideOption = resourceConfig.get("general parallel jobs", "tasks stride option")
+        self.__parallelQueue = resourceConfig.get("general parallel jobs", "queue name")
+        self.__useBatchParallelOpts = resourceConfig.getboolean("general parallel jobs", "use batch parallel options")
+
+
+        # Get the distributed memory jobs options
+        self.__distribJobLauncher = resourceConfig.get("distributed-mem jobs", "parallel job launcher")
+        self.__distribJobOptions = resourceConfig.get("distributed-mem jobs", "additional job options")
+        self.__distribScriptPreamble = resourceConfig.get("distributed-mem jobs", "script preamble commands")
+        self.__distribExecJobOptions = resourceConfig.get("distributed-mem jobs", "executable job options")
+        self.__distribScriptPostamble = resourceConfig.get("distributed-mem jobs", "script postamble commands")
+
+
+        # Get the shared memory jobs options                                                    
+        self.__sharedJobLauncher = resourceConfig.get("shared-mem jobs", "parallel job launcher")
+        self.__sharedJobOptions = resourceConfig.get("shared-mem jobs", "additional job options")
+        self.__sharedScriptPreamble = resourceConfig.get("shared-mem jobs", "script preamble commands")
+        self.__sharedExecJobOptions = resourceConfig.get("shared-mem jobs", "executable job options")
+        self.__sharedScriptPostamble = resourceConfig.get("shared-mem jobs", "script postamble commands")
+
+        # Get the hybrid memory jobs options                                                        
+        self.__hybridJobLauncher = resourceConfig.get("hybrid jobs", "parallel job launcher")
+        self.__hybridJobOptions = resourceConfig.get("hybrid jobs", "additional job options")
+        self.__hybridScriptPreamble = resourceConfig.get("hybrid jobs", "script preamble commands")
+        self.__hybridExecJobOptions = resourceConfig.get("hybrid jobs", "executable job options")
+        self.__hybridScriptPostamble = resourceConfig.get("hybrid jobs", "script postamble commands")
 
         # Get the serial jobs options
         self.__serialJobs = resourceConfig.getboolean("serial jobs", "serial jobs")
-        self.__maxSerialJobTime = resourceConfig.getint("serial jobs", "maximum job duration")
+        self.__maxSerialJobTime = resourceConfig.getfloat("serial jobs", "maximum job duration")
         self.__serialTimeFormat = resourceConfig.get("serial jobs", "serial time format")
         self.__serialQueue = resourceConfig.get("serial jobs", "queue name")
         self.__serialJobOptions = resourceConfig.get("serial jobs", "additional job options")
@@ -353,6 +443,15 @@ class Resource(object):
         '''
         cores = self.socketsPerNode * self.diesPerSocket * self.coresPerDie
         return cores
+
+    def numLogicalCoresPerNode(self):
+        '''Return the number of compute cores per node on this resource, including hyperthreading
+           Returns:
+              int  cores   - Total number of logical compute cores per node 
+        '''
+        cores = self.socketsPerNode * self.diesPerSocket * self.coresPerDie * self.threadsPerCore
+        return cores
+
 
     def summaryString(self):
         """Print a summary of this reource.

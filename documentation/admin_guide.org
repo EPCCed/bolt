@@ -179,9 +179,9 @@ access to these resources is organised.
 + =accelerator type= :: Specify the type of accelerator card present on the
   node (if any). *This option is not currently used in any way.*
 
-*** [parallel jobs]
+*** [general parallel jobs]
 
-These options specify the settings for parallel jobs.
+These options specify the settings for parallel jobs in general.
 
 + =parallel jobs= :: (yes/no) Specify whether or not parallel jobs are supported
   on this resource.
@@ -209,9 +209,6 @@ These options specify the settings for parallel jobs.
   level of task pinning to hardware.
 + =parallel reservation unit= :: Define how parallel jobs are specified in a batch
   script on this resource. Can be 'tasks' (/i.e./ parallel processes) or 'nodes'.
-+ =parallel job launcher= :: The parallel job launcher command on the resource 
-  (/e.g./ 'mpiexec' or 'aprun'). If left blank it is assumed that batch system 
-  automatically launches the parallel job (as in some IBM setups).
 + =number of tasks option= :: The command line option to the parallel job
   launcher command that specifies the number of parallel tasks (/e.g./ -n for
   'aprun'). Leave blank if there is no parallel job launcher command.
@@ -238,10 +235,70 @@ These options specify the settings for parallel jobs.
   if your system does not have a parallel job launcher command and the batch
   system launches the parallel job instead (/e.g./ LoadLeveler on some IBM 
   Power and BlueGene systems).
+
+*** [distributed-mem jobs]
+
+These options specify settings for distributed-memory jobs.
+
++ =parallel job launcher= :: The parallel job launcher command on the resource 
+  (/e.g./ 'mpiexec' or 'aprun'). If left blank it is assumed that batch system 
+  automatically launches the parallel job (as in some IBM setups).
 + =additional job options= :: Any additional batch submission options that need to
   be added to parallel jobs (without the option identified, /e.g./ no #PBS for
   PBS jobs).
 + =script preamble commands= :: Any script lines to include in parallel jobs before 
   the application is launched.
++ =executable job options= :: Additional commands to come before the actual executable if required (e.g. '--exe').
 + =script postamble commands= :: Any script lines to include in parallel jobs after
   the application has finished.
+  
+*** [shared-mem jobs]
+
+These options specify settings for shared-memory jobs.
+
++ =parallel job launcher= :: The parallel job launcher command on the resource 
+  (/e.g./ 'mpiexec' or 'aprun'). If left blank it is assumed that batch system 
+  automatically launches the parallel job (as in some IBM setups).
++ =additional job options= :: Any additional batch submission options that need to
+  be added to parallel jobs (without the option identified, /e.g./ no #PBS for
+  PBS jobs).
++ =script preamble commands= :: Any script lines to include in parallel jobs before 
+  the application is launched.
++ =executable job options= :: Additional commands to come before the actual executable.
++ =script postamble commands= :: Any script lines to include in parallel jobs after
+  the application has finished.
+  
+ 
+ 
+*** [hybrid jobs]
+
+These options specify settings for hybrid jobs.
+
++ =parallel job launcher= :: The parallel job launcher command on the resource 
+  (/e.g./ 'mpiexec' or 'aprun'). If left blank it is assumed that batch system 
+  automatically launches the parallel job (as in some IBM setups).
++ =additional job options= :: Any additional batch submission options that need to
+  be added to parallel jobs (without the option identified, /e.g./ no #PBS for
+  PBS jobs).
++ =script preamble commands= :: Any script lines to include in parallel jobs before 
+  the application is launched.
++ =executable job options= :: Additional commands to come before the actual executable.
++ =script postamble commands= :: Any script lines to include in parallel jobs after
+  the application has finished.
+  
+
+
+*** [serial jobs]
+
+These options specify the settings for serial jobs.
+
++ =serial jobs= :: (yes/no) Specify whether or not serial jobs are available.
++ =maximum job duration= :: The maximum job duration (in whole hours) allowed for serial jobs.
++ =serial time format= :: The format for the serial job time will be printed in the job submission script. Valid values are: 'hms' - hh:mm:ss; 'hours' - integer hours; 'seconds' - integer seconds.
++ =queue name= :: The queue name to use for the serial job (if blank, it is assumed that no queue name is needed).
++ =additional job options= :: Any additional batch submission otpions to add to serial job (without the option ID).
++ =script preamble commands= :: Any script lines to include in serial jobs before 
+  the application is launched.
++ =script postamble commands= :: Any script lines to include in serial jobs after
+  the application has finished.
+
