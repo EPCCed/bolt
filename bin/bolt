@@ -120,7 +120,7 @@ def main(argv):
     sys.stderr.write("===========================================================================\n")
     sys.stderr.write("bolt " + __version__ + "\n")
     sys.stderr.write("---------------------------------------------------------------------------\n")
-    sys.stderr.write("Copyright 2012  EPCC, The University of Edinburgh\n")
+    sys.stderr.write("Copyright 2012  EPCC, The University of Edinburgh \n")
     sys.stderr.write("This program comes with ABSOLUTELY NO WARRANTY; for details type `bolt -i'.\n")
     sys.stderr.write("This is free software, and you are welcome to redistribute it\n")
     sys.stderr.write("under certain conditions; type `bolt -i' for details.\n")
@@ -153,7 +153,8 @@ def main(argv):
             batch.readConfig(batchConfigDir + '/' + file) 
             batches.append(batch)
             batchDict[batch.name] = nBatch - 1
-        
+
+#    sys.stdout.write("It is batch system: " + batch.name + "\n")    
     if nBatch == 0:
         error.handleError("No batch systems defined in {0}.\n".format(batchConfigDir))
 
@@ -171,6 +172,7 @@ def main(argv):
             resource.readConfig(resourceConfigDir + '/' + file)
             resources.append(resource)
             resourceDict[resource.name] = nResource - 1
+            #sys.stdout.write ("Resources: " + resources.values())
             # Check we have a description of the batch system
             name = resource.batch
             try:
@@ -341,20 +343,26 @@ def main(argv):
 
     # Default cores per node comes from the resource
     if job.pTasksPerNode == 0:
-        defaultCPN = resource.numCoresPerNode()
+        if job.threads <= resource.numCoresPerNode():
+            defaultCPN = resource.numCoresPerNode()
+        else:
+            defaultCPN = resource.numLogicalCoresPerNode()
         # We need to account for the number of threads if > 1
-        if job.threads > resource.numCoresPerNode():
-            error.handleError("Number of threads requested ({0}) is greater than number of cores per node on resource {1} ({2}).".format(job.threads, resource.name, resource.numCoresPerNode()))
+        if job.threads > resource.numLogicalCoresPerNode():
+#            sys.stdout.write("numLogicalCoresPerNode in bolt.py :" +str(resource.numLogicalCoresPerNode())+"\n")
+            error.handleError("Number of my threads requested ({0}) is greater than number of cores per node on resource {1} ({2}).".format(job.threads, resource.name, resource.numLogicalCoresPerNode()))
         if job.threads > 1: defaultCPN = defaultCPN / job.threads
         # Catch the case where there are less than a nodes-worth of tasks
         defaultCPN = min(job.pTasks * job.threads, defaultCPN)
         job.setTasksPerNode(defaultCPN)
         error.printWarning("Setting number of tasks per node to " + str(defaultCPN))
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> dev-unittests
+
+# <<<<<<< HEAD
+        
+# =======
+
+# >>>>>>> dev-unittests
     if (job.accountID == "") or (job.accountID is None) and (resource.accountRequired):
         if resource.defaultAccount == "group":
             # Get account from *nix group
@@ -373,6 +381,12 @@ def main(argv):
         if (job.queueName == "") or (job.queueName is None):
             job.setQueue(resource.serialQueue)
 
+    # Is this a distributed-memory job or shared-memory or hybrid                               
+    job.setIsDistrib((job.pTasks > 1) and (job.threads == 1))
+    job.setIsShared((job.pTasks == 1) and (job.threads > 1))
+    job.setIsHybrid((job.pTasks > 1) and (job.threads > 1))
+
+
     #=======================================================
     # Consistency checks
     #=======================================================
@@ -387,6 +401,7 @@ def main(argv):
             if ((resource.taskPerNodeOption == "") or (resource.taskPerNodeOption == None)) and \
                            ((resource.nodesOption == "") or (resource.nodesOption == None)):
                 error.printWarning("Tasks per node specified ({0}) but option is not supported on resource {1}. {2} will be used.".format(job.pTasksPerNode, resource.name, min(job.pTasks, resource.numCoresPerNode())))
+
                 job.setTasksPerNode(min(job.pTasks, resource.numCoresPerNode()))
 
     # Check that we have specified a sensible number of tasks for a parallel job
@@ -395,6 +410,7 @@ def main(argv):
 
     # Check that we have specified a sensible job time
     job.checkTime(resource)
+    #sys.stdout.write("It is batch system: " + batch.name + "\n")
 
     # Check that we have an account (if required)
     if resource.accountRequired:
@@ -404,48 +420,128 @@ def main(argv):
     #=======================================================
     # Write out the job script
     #=======================================================
+
     # Is this a serial or parallel job
     if job.isParallel:
-        # Set the job command 
-        if code is None:
-            # No code specified, job command is the remaining arguments
-            job.setJobCommand(' '.join(args))
-        else:
-            # Print the message for the specified code
-            if code.message is not None: sys.stdout.write("Note:\n" + code.message + "\n\n")
-            # Get the executable from the code description
-            # Are we running parallel or hybrid job
-            if job.threads > 1:
-                if len(code.hybrid) == 0:
-                    error.handleError("Shared-memory threads specified but not supported by code {0}.".format(code.name))
-                else:
-                    job.setJobCommand(code.hybrid + " " + code.argFormat.format(*args))
-            elif job.threads == 1:
-                if len(code.parallel) == 0:
-                    error.handleError("Parallel job specified but not supported by code {0}.".format(code.name))
-                else:
-                    job.setJobCommand(code.parallel + " " + code.argFormat.format(*args))
+        sys.stdout.write("This is a PARALLEL job.\n")
 
         # For parallel jobs we need to compute the pseudo-optimal distribution of
         # tasks and set the parallel job launcher command
-        job.setParallelDistribution(resource, batch)
         # Write the parallel job script
-        job.writeParallelJob(batch, resource, code, outputFile)
-    else:
-        if code is None:
-            # Job command is the remaining arguments
-            job.setJobCommand(' '.join(args))
-        else:
-            # Print the message for the specified code
-            if code.message is not None: sys.stdout.write("Note:\n" + code.message + "\n\n")
-            if len(code.serial) == 0:
-                error.handleError("Serial job specified but not supported by code {0}.".format(code.name))
+
+        if job.isDistrib:
+            sys.stdout.write("This is an MPI job. \n")
+
+# Set the job command                                                                       
+            if code is None:
+            # No code specified, job command is the remaining arguments                             
+                job.setJobCommand(resource.distribExecJobOptions+ " " +' '.join(args))
             else:
-                job.setJobCommand(code.serial + " " + code.argFormat.format(*args))
+            # Print the message for the specified code                                              
+                if code.message is not None: sys.stdout.write("Note:\n" + code.message + "\n\n")
+                # Get the executable from the code description                                          
+                # Are we running parallel or hybrid job                                                 
+                if job.threads > 1:
+                    if len(code.hybrid) == 0:
+                        error.handleError("Shared-memory threads specified but not supported by code {0\
+}.".format(code.name))
+                    else:
+                        job.setJobCommand(code.hybrid + " " + code.argFormat.format(*args))
+                elif job.threads == 1:
+                    if len(code.parallel) == 0:
+                        error.handleError("Parallel job specified but not supported by code {0}.".format(code.name))
+                    else:
+                        job.setJobCommand(code.parallel +  " " + code.argFormat.format(*args))
 
-        # Write the serial job script
-        job.writeSerialJob(batch, resource, code, outputFile)
 
+
+            job.setParallelJobLauncher(resource.distribJobLauncher)
+            job.setParallelScriptPreamble(resource.distribScriptPreamble)
+            job.setParallelScriptPostamble(resource.distribScriptPostamble)
+            job.setJobOptions(resource.distribJobOptions)            
+
+        if job.isShared:
+            sys.stdout.write("This is an OpenMP job.\n") 
+
+    # Set the job command                                                                       
+            if code is None:
+                # No code specified, job command is the remaining arguments                             
+                job.setJobCommand(resource.sharedExecJobOptions+ " " +' '.join(args))
+            else:
+                # Print the message for the specified code                                              
+                if code.message is not None: sys.stdout.write("Note:\n" + code.message + "\n\n")
+                # Get the executable from the code description                                          
+                # Are we running parallel or hybrid job                                                 
+                if job.threads > 1:
+                    if len(code.hybrid) == 0:
+                        error.handleError("Shared-memory threads specified but not supported by code {0}.".format(code.name))
+                    else:
+                        job.setJobCommand(code.hybrid + " " + code.argFormat.format(*args))
+                elif job.threads == 1:
+                    if len(code.parallel) == 0:
+                        error.handleError("Parallel job specified but not supported by code {0}.".format(code.name))
+                    else:
+                        job.setJobCommand(code.parallel +  " " + code.argFormat.format(*args))
+
+
+
+            job.setParallelJobLauncher(resource.sharedJobLauncher)
+            job.setParallelScriptPreamble(resource.sharedScriptPreamble)
+            job.setParallelScriptPostamble(resource.sharedScriptPostamble)
+            job.setJobOptions(resource.sharedJobOptions)
+
+
+        if job.isHybrid:
+            sys.stdout.write("This is a hybrid job.\n")
+
+# Set the job command                                                                       
+            if code is None:
+                # No code specified, job command is the remaining arguments                             
+                job.setJobCommand(resource.hybridExecJobOptions+ " " +' '.join(args))
+            else:
+                # Print the message for the specified code                                              
+                if code.message is not None: sys.stdout.write("Note:\n" + code.message + "\n\n")
+                # Get the executable from the code description                                          
+                # Are we running parallel or hybrid job                                                 
+                if job.threads > 1:
+                    if len(code.hybrid) == 0:
+                        error.handleError("Shared-memory threads specified but not supported by code {0}.".format(code.name))
+                    else:
+                        job.setJobCommand(code.hybrid + " " + code.argFormat.format(*args))
+                elif job.threads == 1:
+                    if len(code.parallel) == 0:
+                        error.handleError("Parallel job specified but not supported by code {0}.".format(code.name))
+                    else:
+                        job.setJobCommand(code.parallel +  " " + code.argFormat.format(*args))
+
+
+            job.setParallelJobLauncher(resource.hybridJobLauncher)
+            job.setParallelScriptPreamble(resource.hybridScriptPreamble)
+            job.setParallelScriptPostamble(resource.hybridScriptPostamble)
+            job.setJobOptions(resource.hybridJobOptions)
+
+        job.setParallelDistribution(resource, batch)
+        job.writeParallelJob(batch, resource, code, outputFile)
+
+
+    else:
+                
+#Serial job
+                sys.stdout.write("This is a SERIAL job.\n")
+                if code is None:
+                    # Job command is the remaining arguments
+                    job.setJobCommand(' '.join(args))
+                else:
+                    # Print the message for the specified code
+                    if code.message is not None: sys.stdout.write("Note:\n" + code.message + "\n\n")
+                    if len(code.serial) == 0:
+                        error.handleError("Serial job specified but not supported by code {0}.".format(code.name))
+                    else:
+                        job.setJobCommand(code.serial + " " + code.argFormat.format(*args))
+                        
+                # Write the serial job script
+                job.writeSerialJob(batch, resource, code, outputFile)
+                        
     # Close the file if we need to
     if outputFileName is not None: outputFile.close()
     
