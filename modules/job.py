@@ -386,12 +386,7 @@ class Job(object):
             # Can we control the number of tasks per node?
             option = batch.taskPerNodeOption
             if (option != "") and (option is not None) and (self.pTasksPerNode > 0):
-                if batch.name == 'TorqueStokes':
-
-                    pBatchOptions = "{0}{1}{2}\n".format(pBatchOptions, batch.optionID, option)                   
-                else:
-
-                    pBatchOptions = "{0}{1} {2}{3}\n".format(pBatchOptions, batch.optionID, option, self.pTasksPerNode)
+                pBatchOptions = "{0}{1} {2}{3}\n".format(pBatchOptions, batch.optionID, option, self.pTasksPerNode)
 
             # Can we control the number of tasks per die?
             option = batch.taskPerDieOption

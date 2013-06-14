@@ -73,7 +73,7 @@ parallel option:        -l nodes=
 # node. Only needed if the batch system launches the parallel
 # job rather than using a job-launcher command such as
 # mpiexec.
-task per node option:    -l ppn=12
+task per node option:    -l ppn=
 
 # Batch system option to specify the number of tasks per
 # die.
