@@ -71,6 +71,12 @@ in a sub-script.
                               script for. Default is specified by the resource
                               configuration. Use the '-l' option to list valid
                               values.
++ -c,--code <code>         :: Specify a simulation code to generate a batch script
+                              for. Use the '-l' option to list valid
+                              values and details on the arguments that should be
+                              provided.
++ -d,--threads <n>         :: The number of shared-memory threads per  parallel task.
+                              The defualt is 1.
 + -h,--help                :: Show this help.
 + -i,--info                :: Print the program licence and warranty.
 + -l,--list                :: List the resources and batch systems available.
