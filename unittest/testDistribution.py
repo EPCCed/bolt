@@ -26,6 +26,7 @@ class DistributionTestCase(unittest.TestCase):
         self.job.setTasks(1024)
         self.job.setTasksPerNode(self.resource.numCoresPerNode())
         self.job.setThreads(1)
+        self.job.setParallelJobLauncher(self.resource.distribJobLauncher)
         self.job.setParallelDistribution(self.resource, self.batch)
         
         correct = "aprun -n 1024 -N 32 -S 8 -d 1"
@@ -38,6 +39,7 @@ class DistributionTestCase(unittest.TestCase):
         self.job.setTasks(1024)
         self.job.setTasksPerNode(16)
         self.job.setThreads(1)
+        self.job.setParallelJobLauncher(self.resource.distribJobLauncher)
         self.job.setParallelDistribution(self.resource, self.batch)
         
         correct = "aprun -n 1024 -N 16 -S 4 -d 2"
@@ -50,6 +52,7 @@ class DistributionTestCase(unittest.TestCase):
         self.job.setTasks(1024)
         self.job.setTasksPerNode(16)
         self.job.setThreads(2)
+        self.job.setParallelJobLauncher(self.resource.hybridJobLauncher)
         self.job.setParallelDistribution(self.resource, self.batch)
         
         correct = "export OMP_NUM_THREADS=2\naprun -n 1024 -N 16 -S 4 -d 2"
@@ -62,6 +65,7 @@ class DistributionTestCase(unittest.TestCase):
         self.job.setTasks(1024)
         self.job.setTasksPerNode(10)
         self.job.setThreads(3)
+        self.job.setParallelJobLauncher(self.resource.hybridJobLauncher)
         self.job.setParallelDistribution(self.resource, self.batch)
         
         correct = "export OMP_NUM_THREADS=3\naprun -n 1024 -N 10 -d 3"
