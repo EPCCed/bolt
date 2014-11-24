@@ -29,7 +29,7 @@ __author__ = "A. R. Turner, EPCC"
 
 import sys
 
-class Resource(object):
+class BoltResource(object):
     """This class represents an compute resource. Resources are currently
        defined using configuration file via the [ConfigParser] module"""
     def __init__(self):
