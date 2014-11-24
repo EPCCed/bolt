@@ -424,14 +424,12 @@ def main(argv):
 
     # Is this a serial or parallel job
     if job.isParallel:
-        sys.stdout.write("This is a PARALLEL job.\n")
 
         # For parallel jobs we need to compute the pseudo-optimal distribution of
         # tasks and set the parallel job launcher command
         # Write the parallel job script
 
         if job.isDistrib:
-            sys.stdout.write("This is an MPI job. \n")
 
 # Set the job command                                                                       
             if code is None:
@@ -461,8 +459,7 @@ def main(argv):
             job.setParallelScriptPostamble(resource.distribScriptPostamble)
             job.setJobOptions(resource.distribJobOptions)            
 
-        if job.isShared:
-            sys.stdout.write("This is an OpenMP job.\n") 
+        if job.isShared: 
 
     # Set the job command                                                                       
             if code is None:
@@ -493,7 +490,6 @@ def main(argv):
 
 
         if job.isHybrid:
-            sys.stdout.write("This is a hybrid job.\n")
 
 # Set the job command                                                                       
             if code is None:
@@ -528,7 +524,6 @@ def main(argv):
     else:
                 
 #Serial job
-                sys.stdout.write("This is a SERIAL job.\n")
                 if code is None:
                     # Job command is the remaining arguments
                     job.setJobCommand(' '.join(args))
