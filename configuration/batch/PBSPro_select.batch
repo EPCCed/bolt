@@ -1,0 +1,142 @@
+#----------------------------------------------------------------------
+# Copyright 2014 EPCC, The University of Edinburgh
+#
+# This file is part of bolt.
+#
+# bolt is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# bolt is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with bolt.  If not, see <http://www.gnu.org/licenses/>.
+#----------------------------------------------------------------------
+#
+# PBSPro Batch System
+# ===================
+#
+# This configuration file describes the PBSPro batch system
+# for use with the 'bolt' job submission script generation 
+# tool.
+#
+# This version uses the select/place options for newer 
+# versions of PBSPro.
+#
+# This file has been annotated with comments describing each
+# option to aid in installing the tool on other systems.
+#
+# All options must be provided in the configuration file even
+# if the value is not specified.
+#
+
+#-------------------------------------------------------------
+# System description
+#
+# This section defines the name of the batch system for the
+# tool. This name is used when defining the batch system used
+# by a particular compute resource (see the resources
+# configuration files.
+#-------------------------------------------------------------
+[system info]
+name: PBSPro_select
+
+# This option sets the name of the command used to submit the job
+submit command: qsub
+
+#-------------------------------------------------------------
+# Basic options
+#
+# This section includes options that apply to both parallel 
+# and serial jobs
+#-------------------------------------------------------------
+[basic options]
+
+# The option identifier is the string that precedes every
+# batch option specified in the job submission script
+option identifier: #PBS
+
+# Option used to specify the job name
+job name option:   -N
+
+# Option used to specify the account to charge the job to
+account option:    -A
+
+# Option used to specify the queue name
+queue option:      -q
+
+#-------------------------------------------------------------
+# Parallel options
+#
+# Options specific to parallel jobs
+#-------------------------------------------------------------
+[parallel options]
+
+# The option used to specify the number of parallel tasks.
+# This is usually combined with the parallel environment 
+# option from the resource configuration file to produce
+# the full command line.
+parallel option:        -l select=
+
+# Batch system option to specify the number of tasks per
+# node. Only needed if the batch system launches the parallel
+# job rather than using a job-launcher command such as
+# mpiexec.
+task per node option:
+
+# Batch system option to specify the number of tasks per
+# die.
+task per die option:
+
+# Batch system option to specify the preferred stride 
+# between parallel tasks.
+task stride option:
+
+# The option to specify the parallel walltime. If this does not end
+# with = or : then a space will be placed between this 
+# and the actual walltime specified.
+time option:        -l walltime=
+
+# Any additional options to add for parallel jobs. Note these
+# should be specified without the option identifier as this
+# will be added automatically. Multiple options should be 
+# separated by a ',' (comma).
+additional options:
+
+# Any script lines to include in parallel jobs before the
+# application is launched
+script preamble:
+
+# Any script lines to include in parallel jobs after the
+# application has completed
+script postamble:
+
+#-------------------------------------------------------------
+# Serial options
+#
+# Options specific to serial jobs
+#-------------------------------------------------------------
+[serial options]
+
+# The option to specify the serial walltime. If this does not end
+# with = or : then a space will be placed between this 
+# and the actual walltime specified.
+time option:        -l walltime=
+
+# Any additional options to add for parallel jobs. Note these
+# should be specified without the option identifier as this
+# will be added automatically.
+additional options: -l select=serial=true:ncpus=1
+
+# Any script lines to include in serial jobs before the
+# application is launched
+script preamble:
+
+# Any script lines to include in serial jobs after the
+# application has completed
+script postamble:
+
