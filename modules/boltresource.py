@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# Copyright 2012 EPCC, The University of Edinburgh
+# Copyright 2012, 2014 EPCC, The University of Edinburgh
 #
 # This file is part of bolt.
 #
@@ -150,7 +150,7 @@ class Resource(object):
         """The type of accelerator (if any) on a compute node"""
         return self.__accelerator
 
-    # Parallel job settings
+    # Parallel boltjob settings
     @property
     def parallelJobs(self):
         """Are parallel jobs allowed on the resource?"""
@@ -198,7 +198,7 @@ class Resource(object):
         return self.__parallelTimeFormat
     @property
     def preferredStride(self):
-        """When underpopulating nodes, the preffered stride between tasks.
+        """When underpopulating nodes, the preferred stride between tasks.
         This is only relevent if the parallel job launcher can control
         task placement at this level (e.g. Cray aprun)"""
         return self.__preferredStride
@@ -313,7 +313,7 @@ class Resource(object):
             is finished"""
         return self.__hybridScriptPostamble
 
-    # Serial job settings
+    # Serial boltjob settings
     @property
     def serialJobs(self):
         """Are parallel jobs allowed on the resource?"""

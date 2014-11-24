@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# Copyright 2012 EPCC, The University of Edinburgh
+# Copyright 2012, 2014 EPCC, The University of Edinburgh
 #
 # This file is part of bolt.
 #
@@ -25,7 +25,7 @@ file that uses the [ConfigParser] module.
 """
 __author__ = "A. R. Turner, EPCC"
 
-class Code(object):
+class BoltCode(object):
     def __init__(self):
         """The default constructor - setup an simulation code system"""
         self.__name = None
@@ -118,7 +118,7 @@ class Code(object):
         codeConfig = ConfigParser.SafeConfigParser()
         codeConfig.read(fileName)
 
-        # Get the batch information options
+        # Get the boltbatch information options
         self.__name = codeConfig.get("code info", "name")
         self.__desc = codeConfig.get("code info", "description")
         self.__message = codeConfig.get("code info", "runtime message")

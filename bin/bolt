@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 #===============================================================
 # bolt - Simple Job Submission Tool
@@ -9,6 +9,7 @@
 #===============================================================
 #
 #===============================================================
+# v0.6 - Prefixed all modules with "bolt"
 # v0.5 - Added support for hybrid jobs and ability to define
 #        simulation codes
 # v0.4 - Added option to distribute tasks using batch system
@@ -99,11 +100,11 @@ OPTIONS
 __author__ = 'Andrew Turner, EPCC, The University of Edinburgh'
 __version__ = '0.5'
 
-from resource import Resource
-from batch import Batch
-from job import Job
-from code import Code
-import error
+from boltresource import BoltResource as Resource
+from boltbatch import BoltBatch as Batch
+from boltjob import BoltJob as Job
+from boltcode import BoltCode as Code
+import bolterror as error
 import sys
 import os
 import fnmatch

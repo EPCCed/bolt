@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# Copyright 2012 EPCC, The University of Edinburgh
+# Copyright 2012, 2014 EPCC, The University of Edinburgh
 #
 # This file is part of bolt.
 #
@@ -19,13 +19,13 @@
 """
 A python class to represent a batch system
 
-This class is part of the bolt job submission script generation 
+This class is part of the bolt boltjob submission script generation 
 tool. The properties of the class are read from a configuration 
 file that uses the [ConfigParser] module.
 """
 __author__ = "A. R. Turner, EPCC"
 
-class Batch(object):
+class BoltBatch(object):
     def __init__(self):
         """The default constructor - setup an empty batch system"""
         self.__name = ""
@@ -85,7 +85,7 @@ class Batch(object):
         PBS batch system"""
         return self.__queueOption
 
-    # Parallel job options
+    # Parallel boltjob options
     @property
     def parallelOption(self):
         """The option used to specify the number of parallel units to use."""
@@ -254,7 +254,7 @@ class Batch(object):
         return text
 
     def summaryString(self):
-        """Return a string summarising the resource.
+        """Return a string summarising the batch system.
 
            Return:
               str  output  - The string summarising the batch system
