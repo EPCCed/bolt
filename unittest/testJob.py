@@ -1,7 +1,7 @@
 import unittest
 import os
 import sys
-from job import Job
+from boltjob import BoltJob as Job
     
 class JobTestCase(unittest.TestCase):
     

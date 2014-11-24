@@ -1,8 +1,8 @@
 import unittest
 import os
-from job import Job
-from batch import Batch
-from resource import Resource
+from boltjob import BoltJob as Job
+from boltbatch import BoltBatch as Batch
+from boltresource import BoltResource as Resource
 
 configDir = "/unittest/configuration"
 batchConfig = "test.batch"
