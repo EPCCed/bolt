@@ -17,11 +17,11 @@
 # along with bolt.  If not, see <http://www.gnu.org/licenses/>.
 #----------------------------------------------------------------------
 #
-# HECToR Resource
+# ARCHER2 Resource
 # ===============
 #
-# This configuration file describes the Stokes compute resource:
-#    http://www.hector.ac.uk
+# This configuration file describes the ARCHER2 compute resource:
+#    http://www.archer2.ac.uk
 # for the 'bolt' job script generation tool.
 #
 # This file has been annotated with comments describing each
@@ -42,22 +42,22 @@
 # The name of the system and a short description of the 
 # compute architecture (only used for information 
 # purposes)
-system name:           HECToR
-system description:    Cray XE6 (32-core per node)
+system name:           ARCHER2
+system description:    HPE Cray EX (128-core per node)
 
 # Specify the shell definition line that will be placed
 # at the top of every job submission script
-job script shell:      #!/bin/bash --login
+job script shell:      #!/bin/bash
 
 # Specify the batch system name - the name must correcpond
 # to the name of a system defined in the corresponding batch
 # system configuration files
-batch system:          PBSPro
+batch system:          Slurm
 
 # Total number of compute nodes on the system (currently used
 # to calculate the number of cores available for information
 # purposes only)
-total nodes:           2816
+total nodes:           1024
 
 # Are job submission scripts required to set an account ID option
 # (usually for charging purposes). 
@@ -86,11 +86,11 @@ default account code:  group
 # The number of physical processor sockets per node
 sockets per node:      2
 
-# The number of dies (or NUMA regoins) per socket
-dies per socket:       2
+# The number of dies (or NUMA regions) per socket
+dies per socket:       4
 
 # The number of cores per die
-cores per die:         8
+cores per die:         16
 
 # The number of threads per core (hyperthreading)
 threads per core:      1
@@ -120,7 +120,7 @@ parallel jobs:              yes
 hybrid jobs:               yes
 
 # The maximum number of parallel tasks allowed for a single job
-maximum tasks:              65536
+maximum tasks:             131040
 
 # The minimum number of parallel tasks needed for a single job
 minimum tasks:              1
@@ -141,7 +141,7 @@ minimum tasks:              1
 #
 # i.e. 1-4 nodes have 12 hour maximum; 5-128 nodes have 24
 # hour maximum and 129 upwards have 12 hour maximum.
-maximum job duration:       1-4:12,5-128:24,129-:12
+maximum job duration:       1-16:48,17-:24
 
 # The format that the parallel job time will be printed in in
 # the job submission script. Valid values are:
@@ -154,17 +154,17 @@ parallel time format:       hms
 # (if the number of tasks per node specified allows this 
 # flexibility and the job launcher supports task placement at
 # this level).
-preferred task stride:      2        ; tasks
+preferred task stride:      1        ; tasks
 
 # Define how parallel resources are requested in a batch script. Valid
 # values are:
 #  + 'tasks' - Number of tasks is used
 #  + 'nodes' - Number of nodes is used
-parallel reservation unit:  tasks    ; can be 'tasks' or 'nodes'
+parallel reservation unit:  nodes    ; can be 'tasks' or 'nodes'
 
 # The command line option to the job launcher command that specifies
 # the number of parallel tasks
-number of tasks option:    -n
+number of tasks option:
 
 # The command line option to the job launcher command that specifies
 # the number of nodes to use
@@ -173,38 +173,44 @@ number of nodes option:
 # The command line option to the job launcher command that specifies
 # the number of tasks per node (if blank, tool assumes that this 
 # functionality is not supported).
-tasks per node option:      -N
+tasks per node option:
 
-use stride option for underpopulation: False
+# Some systems should use the tasks stride option if the node is
+# underpopulated to distribute processes evenly across NUMA regions
+# even if not using threads
+use stride option for underpopulation: True
 
 # The command line option to the job launcher command that specifies
 # the number of tasks per die (if blank, tool assumes that this 
 # functionality is not supported).
-tasks per die option:       -S
+tasks per die option:
 
 # The command line option to the job launcher command that specifies
 # the stride between parallel tasks (if blank, tool assumes that this 
 # functionality is not supported).
-tasks stride option:        -d
+tasks stride option:
 
 # The queue name to use for parallel jobs (if blank, it is assumed that
 # no queue name is needed)
-queue name:
-qos name:
+queue name: standard
+
+# The QoS name to use for parallel jobs (if blank, it is assumed that
+# no QoS name is needed)
+qos name: standard
 
 # Do we want to use the batch system to specify the distribution of
 # tasks? This is only usually needed if your system does not have 
 # an explicit parallel job launcher command and the batch system 
 # launches the parallel job instead (for example, LoadLeveller on
 # some IBM Power systems)
-use batch parallel options: False
+use batch parallel options: True
 
 [distributed-mem jobs]
 
 # The parallel job launcher command (for example, 'mpiexec' or 'aprun')
 # If this is unset then we assume that the batch system automatically
 # launches the parallel job.
-parallel job launcher:      aprun
+parallel job launcher:      srun
 
 # Any addtional batch submission options to add to parallel
 # jobs (without the option ID).
@@ -212,11 +218,11 @@ additional job options:
 
 # Any script lines to include in parallel jobs before the
 # application is launched
-script preamble commands:   # Switch to current working directory
-                            cd $PBS_O_WORKDIR
+script preamble commands: module load epcc-job-env
+                          export OMP_NUM_THREADS=1
 
 # Additional commands to come before the actual executable
-executable job options: 
+executable job options: --cpu-bind=cores
 
 # Any script lines to include in parallel jobs after the
 # application has finished
@@ -227,7 +233,7 @@ script postamble commands:
 # The parallel job launcher command (for example, 'mpiexec' or 'aprun')
 # If this is unset then we assume that the batch system automatically
 # launches the parallel job.
-parallel job launcher:      aprun
+parallel job launcher:      srun
 
 # Any addtional batch submission options to add to parallel
 # jobs (without the option ID).
@@ -235,11 +241,10 @@ additional job options:
 
 # Any script lines to include in parallel jobs before the
 # application is launched
-script preamble commands:    # Switch to current working directory
-                            cd $PBS_O_WORKDIR
+script preamble commands: module load epcc-job-env
 
 # Additional commands to come before the actual executable
-executable job options: 
+executable job options: --hint=nomultithread --distribution=block:block
 
 # Any script lines to include in parallel jobs after the
 # application has finished
@@ -250,7 +255,7 @@ script postamble commands:
 # The parallel job launcher command (for example, 'mpiexec' or 'aprun')
 # If this is unset then we assume that the batch system automatically
 # launches the parallel job.
-parallel job launcher:      aprun
+parallel job launcher:      srun
 
 # Any addtional batch submission options to add to parallel
 # jobs (without the option ID).
@@ -258,11 +263,10 @@ additional job options:
 
 # Any script lines to include in parallel jobs before the
 # application is launched
-script preamble commands:   # Switch to current working directory
-                            cd $PBS_O_WORKDIR
+script preamble commands: module load epcc-job-env
 
 # Additional commands to come before the actual executable
-executable job options:      -npernode $(( 12 / $OMP_NUM_THREADS ))
+executable job options: --hint=nomultithread --distribution=block:block
 
 # Any script lines to include in parallel jobs after the
 # application has finished
@@ -277,7 +281,7 @@ script postamble commands:
 [serial jobs]
 
 # Specify whether or not serial jobs are available
-serial jobs:               yes
+serial jobs:               no
 
 # The maximum job duration (in whole hours) allowed for serial jobs
 #Longer walltimes not advised, will result in longer queue times
@@ -292,8 +296,11 @@ serial time format:       hms
 
 # The queue name to use for serial jobs (if blank, it is assumed that
 # no queue name is needed)
-queue name:               serial
-qos name:
+queue name: standard
+
+# The QoS name to use for serial jobs (if blank, it is assumed that
+# no QoS name is needed)
+qos name: standard
 
 # Any addtional batch submission options to add to serial
 # jobs (without the option ID).
@@ -301,10 +308,8 @@ additional job options:
 
 # Any script lines to include in parallel jobs before the
 # application is launched
-script preamble commands:   # Switch to current working directory
-                            cd $PBS_O_WORKDIR
+script preamble commands: module load epcc-job-env
 
 # Any script lines to include in parallel jobs after the
 # application has finished
 script postamble commands:
-

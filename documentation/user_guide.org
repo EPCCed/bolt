@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# Copyright 2012 EPCC, The University of Edinburgh
+# Copyright 2012-2020 EPCC, The University of Edinburgh
 #
 # This file is part of bolt.
 #

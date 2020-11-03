@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# Copyright 2012, 2014 EPCC, The University of Edinburgh
+# Copyright 2012-2020 EPCC, The University of Edinburgh
 #
 # This file is part of bolt.
 #
@@ -61,6 +61,7 @@ class BoltResource(object):
         self.__parallelTaskOption = None
         self.__nodesOption = None
         self.__taskPerNodeOption = None
+        self.__useStrideOptionForUnderpop = False
         self.__taskPerDieOption = None
         self.__taskStrideOption = None
         self.__parallelQueue = None
@@ -236,6 +237,11 @@ class BoltResource(object):
         launcher cannot control this"""
         return self.__taskPerNodeOption
     @property
+    def useStrideOptionForUnderpop(self):
+        """Choose whether to use the stride option to distribute
+        parallel tasks if the node is underpopulated."""
+        return self.__useStrideOptionForUnderpop
+    @property
     def taskPerDieOption(self):
         """Command-line option to job launcher command that sets the
         number of parallel tasks per die. If not set it indicates that the
@@ -252,6 +258,11 @@ class BoltResource(object):
         """The name of the parallel queue on the resource. If not set then
         no queue will be specified in the submission script."""
         return self.__parallelQueue
+    @property
+    def parallelQos(self):
+        """The name of the parallel QoS on the resource. If not set then
+        no QoS will be specified in the submission script."""
+        return self.__parallelQos
     @property
     def useBatchParallelOpts(self):
         """Choose whether to use the batch system options to distribute the
@@ -328,9 +339,14 @@ class BoltResource(object):
         return self.__serialTimeFormat
     @property
     def serialQueue(self):
-        """The name of the parallel queue on the resource. If not set then
+        """The name of the serial queue on the resource. If not set then
         no queue will be specified in the submission script."""
         return self.__serialQueue
+    @property
+    def serialQos(self):
+        """The name of the serial QoS on the resource. If not set then
+        no QoS will be specified in the submission script."""
+        return self.__serialQos
     @property
     def serialJobOptions(self):
         """Any additional job options needed for serial jobs"""
@@ -389,9 +405,11 @@ class BoltResource(object):
         self.__parallelTaskOption = resourceConfig.get("general parallel jobs", "number of tasks option")
         self.__nodesOption = resourceConfig.get("general parallel jobs", "number of nodes option")
         self.__taskPerNodeOption = resourceConfig.get("general parallel jobs", "tasks per node option")
+        self.__useStrideOptionForUnderpop = resourceConfig.getboolean("general parallel jobs", "use stride option for underpopulation")
         self.__taskPerDieOption = resourceConfig.get("general parallel jobs", "tasks per die option")
         self.__taskStrideOption = resourceConfig.get("general parallel jobs", "tasks stride option")
         self.__parallelQueue = resourceConfig.get("general parallel jobs", "queue name")
+        self.__parallelQos = resourceConfig.get("general parallel jobs", "qos name")
         self.__useBatchParallelOpts = resourceConfig.getboolean("general parallel jobs", "use batch parallel options")
 
 
@@ -422,6 +440,7 @@ class BoltResource(object):
         self.__maxSerialJobTime = resourceConfig.getfloat("serial jobs", "maximum job duration")
         self.__serialTimeFormat = resourceConfig.get("serial jobs", "serial time format")
         self.__serialQueue = resourceConfig.get("serial jobs", "queue name")
+        self.__serialQos = resourceConfig.get("serial jobs", "qos name")
         self.__serialJobOptions = resourceConfig.get("serial jobs", "additional job options")
         self.__serialScriptPreamble = resourceConfig.get("serial jobs", "script preamble commands")
         self.__serialScriptPostamble = resourceConfig.get("serial jobs", "script postamble commands")

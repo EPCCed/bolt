@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# Copyright 2012, 2014 EPCC, The University of Edinburgh
+# Copyright 2012-2020 EPCC, The University of Edinburgh
 #
 # This file is part of bolt.
 #
@@ -35,6 +35,7 @@ class BoltBatch(object):
         self.__nameOption = None
         self.__accountOption = None
         self.__queueOption = None
+        self.__qosOption = None
 
         self.__parallelOption = None
         self.__nodesOption = None
@@ -84,6 +85,11 @@ class BoltBatch(object):
         """The option used to specify the queue name. For example '-q' for the
         PBS batch system"""
         return self.__queueOption
+    @property
+    def qosOption(self):
+        """The option used to specify the QoS name. For example '--qos=' for the
+        Slurm batch system"""
+        return self.__qosOption
 
     # Parallel boltjob options
     @property
@@ -187,6 +193,7 @@ class BoltBatch(object):
         self.__nameOption = batchConfig.get("basic options", "job name option")
         self.__accountOption = batchConfig.get("basic options", "account option")
         self.__queueOption = batchConfig.get("basic options", "queue option")
+        self.__qosOption = batchConfig.get("basic options", "qos option")
 
         # Get the parallel options
         self.__parallelOption = batchConfig.get("parallel options", "parallel option")
@@ -204,7 +211,7 @@ class BoltBatch(object):
         self.__serialScriptPreamble = batchConfig.get("serial options", "script preamble")
         self.__serialScriptPostamble = batchConfig.get("serial options", "script postamble")
 
-    def getOptionLines(self, isParallel, jobName, queueName, runtime, accountID):
+    def getOptionLines(self, isParallel, jobName, queueName, qosName, runtime, accountID):
         """Generate the batch submission option lines so they can be
            written to a job script
         
@@ -212,6 +219,7 @@ class BoltBatch(object):
               boolean  isParallel - Is this a parallel job?
               str      jobName    - The name of the job
               str      queueName  - The name of the queue to use
+              str      qosName    - The name of the QoS to use
               str      runtime    - The job runtime (hh:mm:ss)
               str      accountID  - The account ID
 
@@ -223,32 +231,34 @@ class BoltBatch(object):
         # Common options
         if (self.nameOption != "") and (self.nameOption is not None) \
            and (jobName != "") and (jobName is not None):
-            text = self.optionID + " " + self.nameOption + " " + jobName + "\n"
+            text = "{0} {1}{2}\n".format(self.optionID, self.nameOption, jobName)
         if (accountID != "") and (accountID is not None):
-            text = text + self.optionID + " " + self.accountOption + " " + accountID + "\n"
+            text = "{0}{1} {2}{3}\n".format(text, self.optionID, self.accountOption, accountID)
         if (queueName != "") and (queueName is not None):
-            text = text + self.optionID + " " + self.queueOption + " " + queueName + "\n"
+            text = "{0}{1} {2}{3}\n".format(text, self.optionID, self.queueOption, queueName)
+        if (qosName != "") and (qosName is not None):
+            text = "{0}{1} {2}{3}\n".format(text, self.optionID, self.qosOption, qosName)
 
         if isParallel:
             # Parallel options
             if (self.parallelTimeOption != "") and (self.parallelTimeOption is not None) \
                and (runtime != "") and (runtime is not None):
-                    text = text + self.optionID + " " + self.parallelTimeOption + runtime + "\n"
+                    text = "{0}{1} {2}{3}\n".format(text, self.optionID, self.parallelTimeOption, runtime)
             if (self.parallelOptions != "") and (self.parallelOptions is not None):
                 # Split out the parallel options
                 options = self.parallelOptions.split(";")
                 for option in options:
-                    text = text + self.optionID + " " + option + "\n"
+                    text = "{0}{1} {2}\n".format(test, self.optionID, option)
         else:
             # Serial options
             if (self.serialTimeOption != "") and (self.serialTimeOption is not None) \
                and (runtime != "") and (runtime is not None):
-                    text = text + self.optionID + " " + self.serialTimeOption + runtime + "\n"
+                    text = "{0}{1} {2}{3}\n".format(text, self.optionID, self.serialTimeOption, runtime)
             if (self.serialOptions != "") and (self.serialOptions is not None):
                 # Split out the parallel options
                 options = self.serialOptions.split(";")
                 for option in options:
-                    text = text + self.optionID + " " + option + "\n"
+                    text = "{0}{1} {2}\n".format(test, self.optionID, option)
 
         text = text + "\n"
         return text

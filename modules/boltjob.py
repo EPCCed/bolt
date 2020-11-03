@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# Copyright 2012, 2014 EPCC, The University of Edinburgh
+# Copyright 2012-2020 EPCC, The University of Edinburgh
 #
 # This file is part of bolt.
 #
@@ -37,6 +37,7 @@ class BoltJob(object):
         self.__name = None
         self.__wallTime = None
         self.__queueName = None
+        self.__qosName = None
         self.__isParallel = False
         self.__isDistrib = False
         self.__isShared = False
@@ -138,9 +139,20 @@ class BoltJob(object):
             """Set the queue name.
 
                Arguments:
-                 str qThe queue name to use
+                 str q The queue name to use
             """
             self.__queueName = q
+    @property
+    def qosName(self):
+            """str The QoS name to use for the job."""
+            return self.__qosName
+    def setQos(self, q):
+            """Set the QoS name.
+
+               Arguments:
+                 str q The QoS name to use
+            """
+            self.__qosName = q
     @property
     def isParallel(self):
         """boolean True = parallel job; false = serial job."""
@@ -296,10 +308,13 @@ class BoltJob(object):
             # This is if we need to ignore the tasks per die option
             if (resource.numCoresPerNode() / self.pTasksPerNode) > resource.preferredStride:
                 strideUsed = min(self.pTasksPerNode, resource.preferredStride)
+        elif (resource.useStrideOptionForUnderpop):
+            if ( ((resource.coresPerDie / coresPerDieUsed) > 1) 
+               and (( resource.coresPerDie % coresPerDieUsed ) == 0) ):
+                strideUsed = resource.coresPerDie / coresPerDieUsed
         elif (resource.coresPerDie / coresPerDieUsed) >= resource.preferredStride:
             strideUsed = min(coresPerDieUsed, resource.preferredStride)
             
-
         # Test to see if we have a parallel run command
         runCommand = self.parallelJobLauncher
         useRunCommand = True
@@ -326,31 +341,34 @@ class BoltJob(object):
             runline = "{0}{1} {2} {3}".format(runLine, self.parallelJobLauncher, option, self.pTasks)
             self.__runLine = runline
           else:
-            # Most basic is just the parallel command and number of tasks
-            option = resource.parallelTaskOption
-            if (option is None) or (option == ""):
-                bolterror.handleError("The job launcher parallel task option is not set.\n", 1)
-            elif self.pTasks == 0:
-                bolterror.handleError("The number of parallel tasks has not been set.\n", 1)
-            runline = "{0}{1} {2} {3}".format(runLine, self.parallelJobLauncher, option, self.pTasks)
-            # Can we control the nodes used?
-            option = resource.nodesOption
-            if ((option != "") and (option is not None)) and (self.pTasksPerNode > 0):
-             runline = "{0} {1} {2}".format(runline, option, nodesUsed) 
-            # Can we control the number of tasks per node?
-            option = resource.taskPerNodeOption
-            if ((option != "") and (option is not None)) and (self.pTasksPerNode > 0):
-                runline = "{0} {1} {2}".format(runline, option, self.pTasksPerNode)
+            if resource.useBatchParallelOpts:
+              runline = "{0}{1}".format(runLine, self.parallelJobLauncher)
+            else:
+              # Most basic is just the parallel command and number of tasks
+              option = resource.parallelTaskOption
+              if (option is None) or (option == ""):
+                  bolterror.handleError("The job launcher parallel task option is not set.\n", 1)
+              elif self.pTasks == 0:
+                  bolterror.handleError("The number of parallel tasks has not been set.\n", 1)
+              runline = "{0}{1} {2} {3}".format(runLine, self.parallelJobLauncher, option, self.pTasks)
+              # Can we control the nodes used?
+              option = resource.nodesOption
+              if ((option != "") and (option is not None)) and (self.pTasksPerNode > 0):
+               runline = "{0} {1} {2}".format(runline, option, nodesUsed) 
+              # Can we control the number of tasks per node?
+              option = resource.taskPerNodeOption
+              if ((option != "") and (option is not None)) and (self.pTasksPerNode > 0):
+                  runline = "{0} {1} {2}".format(runline, option, self.pTasksPerNode)
 
-            # Can we control the number of tasks per die?
-            option = resource.taskPerDieOption
-            if ((option != "") and (option is not None)) and (self.pTasksPerNode > 1) and (coresPerDieUsed > 0):
-                runline = "{0} {1} {2}".format(runline, option, coresPerDieUsed)
+              # Can we control the number of tasks per die?
+              option = resource.taskPerDieOption
+              if ((option != "") and (option is not None)) and (self.pTasksPerNode > 1) and (coresPerDieUsed > 0):
+                  runline = "{0} {1} {2}".format(runline, option, coresPerDieUsed)
                 
-            # Can we control the stride
-            option = resource.taskStrideOption
-            if (option is not None) and (option != ""):
-                runline = "{0} {1} {2}".format(runline, option, strideUsed) 
+              # Can we control the stride
+              option = resource.taskStrideOption
+              if (option is not None) and (option != ""):
+                  runline = "{0} {1} {2}".format(runline, option, strideUsed) 
             
             self.__runLine = runline
 
@@ -390,12 +408,12 @@ class BoltJob(object):
             # Can we control the number of tasks per die?
             option = batch.taskPerDieOption
             if not ((option == "") or (option is None)) and (self.pTasksPerNode > 1) and (coresPerDieUsed > 0):
-                pBatchOptions = "{0}{1} {2}{3}".format(pBatchOptions, batch.optionID, option, coresPerDieUsed)
+                pBatchOptions = "{0}{1} {2}{3}\n".format(pBatchOptions, batch.optionID, option, coresPerDieUsed)
                 
             # Can we control the stride
             option = batch.taskStrideOption
             if (option is not None) and (option != ""):
-                pBatchOptions = "{0}{1} {2}{3}".format(pBatchOptions, batch.optionID, option, strideUsed) 
+                pBatchOptions = "{0}{1} {2}{3}\n".format(pBatchOptions, batch.optionID, option, strideUsed) 
 
 
         self.__pBatchOptions = pBatchOptions
@@ -591,7 +609,7 @@ class BoltJob(object):
         scriptFile.write(self.pBatchOptions)
             
         # Get the boltbatch options
-        text = batch.getOptionLines(True, self.name, self.queueName, \
+        text = batch.getOptionLines(True, self.name, self.queueName, self.qosName, \
                                     self.getWallTime(resource), self.accountID)
         scriptFile.write(text)
 

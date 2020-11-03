@@ -9,6 +9,8 @@
 #===============================================================
 #
 #===============================================================
+# v0.7 - Added configuration options to support setups such
+#        as ARCHER2
 # v0.6 - Prefixed all modules with "bolt"
 # v0.5 - Added support for hybrid jobs and ability to define
 #        simulation codes
@@ -17,7 +19,7 @@
 #===============================================================
 #
 #----------------------------------------------------------------------
-# Copyright 2012, 2014 EPCC, The University of Edinburgh
+# Copyright 2012-2020 EPCC, The University of Edinburgh
 #
 # This file is part of bolt.
 #
@@ -93,12 +95,12 @@ OPTIONS
                          Use the '-l' option to list valid values.
 
 -s,--submit              Submit the created job submission script to the
-             batch system. Default is not to submit job.
+                         batch system. Default is not to submit job.
              
 -t,--job-time <hh:mm:ss> Specify the wallclock limit for the job.
 """
 __author__ = 'Andrew Turner, EPCC, The University of Edinburgh'
-__version__ = '0.6'
+__version__ = '0.7'
 
 from boltresource import BoltResource as Resource
 from boltbatch import BoltBatch as Batch
@@ -254,6 +256,8 @@ def main(argv):
             outputFileName = arg
         if opt in ("-q", "--queue"):
             job.setQueue(arg)
+        if opt in ("--qos"):
+            job.setQos(arg)
         if opt in ("-p", "--force-parallel"):
             forceParallel = True
         if opt in ("-r", "--resource"):
@@ -359,11 +363,6 @@ def main(argv):
         error.printWarning("Setting number of tasks per node to " + str(defaultCPN))
 
 
-# <<<<<<< HEAD
-        
-# =======
-
-# >>>>>>> dev-unittests
     if (job.accountID == "") or (job.accountID is None) and (resource.accountRequired):
         if resource.defaultAccount == "group":
             # Get account from *nix group
@@ -374,13 +373,17 @@ def main(argv):
             job.setAccountID(resource.defaultAccount)
             error.printWarning("Setting accounting code to " + resource.defaultAccount)
 
-    # Default queues if needed
+    # Default queues and QoS if needed
     if job.isParallel:
         if (job.queueName == "") or (job.queueName is None):
             job.setQueue(resource.parallelQueue)
+        if (job.qosName == "") or (job.qosName is None):
+            job.setQos(resource.parallelQos)
     else:
         if (job.queueName == "") or (job.queueName is None):
             job.setQueue(resource.serialQueue)
+        if (job.qosName == "") or (job.qosName is None):
+            job.setQos(resource.serialQos)
 
     # Is this a distributed-memory job or shared-memory or hybrid                               
     job.setIsDistrib((job.pTasks > 1) and (job.threads == 1))

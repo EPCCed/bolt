@@ -17,16 +17,31 @@
 # along with bolt.  If not, see <http://www.gnu.org/licenses/>.
 #----------------------------------------------------------------------
 #
-# This file sets the global options for the 
-# bolt tool.
 #
-# Currently, the following options are set:
-#
-#  + default resource - The name of the default
-#      compute resource to use on this installation.
-#      This resource name must match one of the 
-#      resources defined in the resources configuration
-#      files
-#
-[global options]
-default resource: ARCHER2
+[system info]
+name: Slurm
+submit command: sbatch
+
+[basic options]
+option identifier: #SBATCH
+job name option:   --job-name=
+account option:    --account=
+queue option:      --partition=
+qos option:      --qos=
+
+[parallel options]
+parallel option: --num-nodes=
+task per node option: --tasks-per-node=
+task per die option:
+task stride option: --cpus-per-task=
+time option: --time=
+additional options:
+script preamble:
+script postamble:
+
+[serial options]
+time option:  --time=
+additional options:
+script preamble:
+script postamble:
+
