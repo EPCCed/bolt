@@ -219,7 +219,7 @@ additional job options:
 # Any script lines to include in parallel jobs before the
 # application is launched
 script preamble commands: module load epcc-job-env
-                          export OMP_NUM_THREADS=1
+    export OMP_NUM_THREADS=1
 
 # Additional commands to come before the actual executable
 executable job options: --distribution=block:block --hint=nomultithread
