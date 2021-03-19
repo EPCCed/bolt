@@ -30,7 +30,7 @@ queue option:      --partition=
 qos option:      --qos=
 
 [parallel options]
-parallel option: --num-nodes=
+parallel option: --nodes=
 task per node option: --tasks-per-node=
 task per die option:
 task stride option: --cpus-per-task=
