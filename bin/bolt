@@ -100,7 +100,7 @@ OPTIONS
 -t,--job-time <hh:mm:ss> Specify the wallclock limit for the job.
 """
 __author__ = 'Andrew Turner, EPCC, The University of Edinburgh'
-__version__ = '0.7'
+__version__ = '0.8'
 
 from boltresource import BoltResource as Resource
 from boltbatch import BoltBatch as Batch
@@ -123,7 +123,7 @@ def main(argv):
     sys.stderr.write("===========================================================================\n")
     sys.stderr.write("bolt " + __version__ + "\n")
     sys.stderr.write("---------------------------------------------------------------------------\n")
-    sys.stderr.write("Copyright 2012  EPCC, The University of Edinburgh \n")
+    sys.stderr.write("Copyright 2012-2024  EPCC, The University of Edinburgh \n")
     sys.stderr.write("This program comes with ABSOLUTELY NO WARRANTY; for details type `bolt -i'.\n")
     sys.stderr.write("This is free software, and you are welcome to redistribute it\n")
     sys.stderr.write("under certain conditions; type `bolt -i' for details.\n")
