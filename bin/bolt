@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #===============================================================
 # bolt - Simple Job Submission Tool
@@ -112,7 +112,7 @@ import os
 import fnmatch
 import getopt
 import subprocess
-import ConfigParser
+import configparser
 import grp
 
 def main(argv):
@@ -314,8 +314,8 @@ def main(argv):
     # Try to open the output file
     try:
         outputFile = open(outputFileName, "w")
-    except IOError as (errno, strerror):
-        error.handleError("Opening output file: {0}; {1}".format(outputFileName, strerror), errno)
+    except IOError as strerror:
+        error.handleError("Opening output file: {0}; {1}".format(outputFileName, strerror), 1)
 
     # If no resource or batch systems are specified then use the defaults
     if selectedResource is None: selectedResource = resources[resourceDict[defaultResource]].name
@@ -561,7 +561,7 @@ def readGlobalConfig(fileName):
            Arguments:
               str fileName - Name of the config file
         """
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.ConfigParser()
     config.read(fileName)
 
     globalConfig = {}
@@ -624,7 +624,7 @@ def printHelp(rootDir):
            Arguments:
               str rootDir - The root install directory of the tool.
         """
-    subprocess.call(["pydoc", rootDir + "/bin/bolt"])
+    subprocess.call(["python3 -m pydoc " + rootDir + "/bin/bolt"], shell=True)
 
 def printLicence(rootDir):
     """Print licence for the tool.
@@ -632,7 +632,7 @@ def printLicence(rootDir):
            Arguments:
               str rootDir - The root install directory of the tool.
         """
-    subprocess.call(["cat", rootDir + "/COPYING"])
+    subprocess.call(["cat", rootDir + "/COPYING"], shell=True)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
